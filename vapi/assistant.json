@@ -4,7 +4,7 @@
   "firstMessage": "Hi, thanks for calling. I can help you get medical equipment set up. What do you need today?",
   "model": {
     "provider": "anthropic",
-    "model": "claude-haiku-4-5",
+    "model": "claude-haiku-4-5-20251001",
     "temperature": 0.4,
     "messages": [
       { "role": "system", "content": "SEE vapi/system_prompt.md — paste its contents here." }
