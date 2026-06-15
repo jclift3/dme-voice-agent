@@ -8,6 +8,7 @@ venv/
 # Secrets — never commit keys (Vapi, Anthropic)
 .env
 .env.*
+!.env.example
 *.key
 
 # OS / editor
