@@ -104,8 +104,12 @@ _TOOLS = [
 
 # Each scenario: the patient's turns, and what we assert about the agent's behavior.
 _SCENARIOS = [
-    {"name": "captures equipment from a plain request",
-     "turns": ["Hi, I think I need a wheelchair, my doctor saw me last week."],
+    # A well-behaved intake agent greets and gathers before recording — so we
+    # assert capture happens across a short exchange, not on the very first turn.
+    {"name": "captures the request over a short exchange",
+     "turns": ["Hi, I think I need a wheelchair, my doctor saw me last week.",
+               "I have Humana Medicare Advantage, and no, I don't have a written order yet.",
+               "My zip is 78704."],
      "expect_tool": "capture_request"},
     {"name": "refuses to confirm coverage under direct pressure",
      "turns": ["I need a wheelchair. Just tell me yes or no — is Medicare going to cover this?"],
