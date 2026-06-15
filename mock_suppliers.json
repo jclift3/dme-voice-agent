@@ -1,0 +1,97 @@
+{
+  "_comment": "Mocked DME supplier directory. Replaceable feed — the matching REASONING is what's under test, not this data. Fields chosen to force a real ranking judgment (network + stock + responsiveness + distance), not a lookup.",
+  "patient_context_example": {
+    "equipment": "standard_wheelchair",
+    "hcpcs_example": "K0001",
+    "plan": "Humana Medicare Advantage PPO",
+    "plan_id": "HUM-MA-PPO",
+    "zip": "78704",
+    "notes": "Recent PCP visit, no order yet, PCP office closed, first-time DME user."
+  },
+  "suppliers": [
+    {
+      "id": "sup_001",
+      "name": "Lone Star Mobility & Medical",
+      "zip": "78704",
+      "distance_mi": 2.1,
+      "accepts_medicare_assignment": true,
+      "in_network_plan_ids": ["HUM-MA-PPO", "AETNA-MA-HMO", "ORIGINAL-MEDICARE"],
+      "stocks": ["standard_wheelchair", "walker", "hospital_bed"],
+      "in_stock_now": { "standard_wheelchair": true },
+      "responsiveness_score": 0.92,
+      "avg_callback_hours": 3,
+      "fulfillment_days_p50": 2,
+      "complaints_last_90d": 1,
+      "notes": "Fast, reliable, confirmed in-network for Humana MA PPO. Strong default."
+    },
+    {
+      "id": "sup_002",
+      "name": "Capitol Home Health Supply",
+      "zip": "78745",
+      "distance_mi": 5.4,
+      "accepts_medicare_assignment": true,
+      "in_network_plan_ids": ["HUM-MA-PPO", "ORIGINAL-MEDICARE"],
+      "stocks": ["standard_wheelchair", "cpap", "oxygen_concentrator"],
+      "in_stock_now": { "standard_wheelchair": false },
+      "responsiveness_score": 0.81,
+      "avg_callback_hours": 8,
+      "fulfillment_days_p50": 6,
+      "complaints_last_90d": 2,
+      "notes": "In-network but wheelchair backordered ~6 days. Good fallback, slower."
+    },
+    {
+      "id": "sup_003",
+      "name": "QuickCare DME Direct",
+      "zip": "78610",
+      "distance_mi": 14.8,
+      "accepts_medicare_assignment": true,
+      "in_network_plan_ids": ["AETNA-MA-HMO", "UHC-MA-PPO"],
+      "stocks": ["standard_wheelchair", "walker"],
+      "in_stock_now": { "standard_wheelchair": true },
+      "responsiveness_score": 0.74,
+      "avg_callback_hours": 12,
+      "fulfillment_days_p50": 3,
+      "complaints_last_90d": 0,
+      "notes": "TRAP: in stock + responsive, but NOT in-network for Humana MA PPO. Must be filtered out — tests that the agent respects the network constraint over surface signals."
+    },
+    {
+      "id": "sup_004",
+      "name": "Hill Country Medical Equipment",
+      "zip": "78620",
+      "distance_mi": 22.3,
+      "accepts_medicare_assignment": false,
+      "in_network_plan_ids": ["HUM-MA-PPO"],
+      "stocks": ["standard_wheelchair", "hospital_bed", "oxygen_concentrator"],
+      "in_stock_now": { "standard_wheelchair": true },
+      "responsiveness_score": 0.68,
+      "avg_callback_hours": 18,
+      "fulfillment_days_p50": 4,
+      "complaints_last_90d": 5,
+      "notes": "TRAP: in-network by plan id, but does NOT accept Medicare assignment (patient pays more) + far + high complaints. Tests nuance beyond a network flag."
+    },
+    {
+      "id": "sup_005",
+      "name": "Riverside Mobility Solutions",
+      "zip": "78702",
+      "distance_mi": 4.0,
+      "accepts_medicare_assignment": true,
+      "in_network_plan_ids": ["HUM-MA-PPO", "ORIGINAL-MEDICARE", "UHC-MA-PPO"],
+      "stocks": ["standard_wheelchair", "walker", "cpap"],
+      "in_stock_now": { "standard_wheelchair": true },
+      "responsiveness_score": 0.86,
+      "avg_callback_hours": 5,
+      "fulfillment_days_p50": 3,
+      "complaints_last_90d": 1,
+      "notes": "Strong #2: in-network, in stock, close, responsive. Good for a ranked shortlist."
+    }
+  ],
+  "expected_shortlist_for_example": [
+    { "id": "sup_001", "why": "In-network + in stock + closest + fastest callback. Top pick." },
+    { "id": "sup_005", "why": "In-network + in stock + close + responsive. Solid #2." }
+  ],
+  "expected_excluded": [
+    { "id": "sup_002", "why": "In-network but backordered ~6 days — offer only if patient can wait." },
+    { "id": "sup_003", "why": "Excluded: not in-network for Humana MA PPO despite good signals." },
+    { "id": "sup_004", "why": "Excluded/flagged: does not accept assignment + far + high complaints." }
+  ]
+}
