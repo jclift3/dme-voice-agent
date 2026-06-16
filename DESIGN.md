@@ -180,3 +180,64 @@ Each row: the choice, what we rejected, and why.
   failure paths, no telephony, no key.
 - **Console (`/`)** — the trust boundary made clickable; approve a plan and watch
   the gated legs fire and the callback script appear.
+
+### Two eval layers (logic vs. voice)
+- **`evals/`** — fast, no telephony, no key. Backend policy + a few live conversation
+  turns. Runs in CI.
+- **`cekura/`** — Cekura drives LLM persona callers into the *deployed* Vapi number and
+  grades the audio against the same trust-boundary rubrics, then monitors production.
+  Catches what local evals can't: interruptions, ASR/TTS, latency, drift on real audio.
+  See [cekura/README.md](cekura/README.md). The `one_question_at_a_time` metric exists
+  because the first real call surfaced exactly that bug.
+
+---
+
+## 9. Defense kit — 45-minute live review
+
+The one sentence everything ladders to:
+> **The agent owns coordination, not clinical or coverage judgment. Reads are
+> automated; liability-bearing writes are gated and reversible. It says "here's
+> what's needed," never "you're covered."**
+
+### Run-of-show (~10 min, leave 30+ for questions)
+Pre-flight: backend on `:8000`, console open, `python -m sim.run_demo` ready as the
+voice-breaks fallback, and the number dialed once already today.
+1. **Frame (30s)** — 3-party coordination problem; I took the front door + one real
+   async leg; trust boundary is the thesis.
+2. **The call (2–3m)** — place it / play the recording. Ask "am I covered?" → it
+   returns *steps*, not a verdict.
+3. **Handoff (1m)** — call ends → plan appears; point at the trust-boundary divider
+   (vendor research auto; PCP nudge + callback gated).
+4. **Judgment (2m)** — walk the shortlist; the two excluded traps prove matching, not
+   lookup. Note `plan_id` was null yet Claude inferred the network.
+5. **Gate + loop (1m)** — approve → gated legs fire, callback script appears (never
+   says "covered").
+6. **Failure paths (1m)** — seed `no_vendor` + `low_conf` → both escalate.
+7. **Proof (1m)** — `evals/run_evals` (6/6) + `conversation_evals`; mention Cekura for
+   the deployed agent.
+
+**If voice breaks:** *"Telephony's flaky in the room — here's the identical thread
+without the phone,"* run `python -m sim.run_demo`. The logic is the same either way.
+
+### Hard-question bank
+- *"Why not automate the whole thing?"* — Bottleneck is trust, not capacity. Automating
+  coverage/clinical is where AI loses and the liability is. Automated up to that line.
+- *"Nurse still in the loop — isn't that the point to remove?"* — Removed the *chasing*,
+  not the *judgment*. Nurse goes from 100% legwork to approving a finished plan.
+- *"Show me where it could still say you're covered."* — `coverage.py` returns steps;
+  callback is eval-checked; prompt forbids it. Residual risk is *tone in live speech* —
+  which is why the Cekura `never_claims_coverage` metric grades real audio.
+- *"What if extraction is confidently wrong?"* (sharpest) — `confidence` is self-reported,
+  so a confidently-wrong capture is the real risk; the nurse sees the full captured
+  request before approving. Setting the 0.6 threshold right needs correction-log data.
+- *"How do you know the AI ranking is right?"* — Evals assert hard constraints
+  (out-of-network / no-assignment never shortlist), not an exact order — so they hold for
+  both the model and the fallback. The traps are the proof.
+- *"Latency?"* — Fast model in-call (haiku), strong model async (opus). Measure the in-call
+  number from the real call; Cekura tracks it continuously.
+- *"What worries you shipping to patients?"* — Silent async failure (a stalled plan, no
+  callback) — needs an SLA timer + alerting; then accessibility and PHI handling.
+
+### Tabs to have open
+`app/store.py` (gate + escalation), `app/coverage.py` (steps, never a verdict),
+`evals/`, `cekura/provision.py`, this file.

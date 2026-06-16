@@ -13,7 +13,7 @@ reversible. The agent says "here's what's needed," never "you're covered."
 2. **Run it in 30s, no keys, no phone:** `pip install -r requirements.txt && python -m sim.run_demo`
    then `python -m evals.run_evals`.
 3. **[docs/sample_call.md](docs/sample_call.md)** — transcript + recording of a real call to the agent.
-4. Deeper: [DESIGN.md](DESIGN.md) (decision log), [DEFENSE.md](DEFENSE.md) (demo run-of-show), [PLAN.md](PLAN.md).
+4. Deeper: [DESIGN.md](DESIGN.md) (decisions + defense kit), [cekura/README.md](cekura/README.md) (voice-eval layer), [docs/demo_script.md](docs/demo_script.md).
 
 ```mermaid
 flowchart TD
@@ -91,6 +91,11 @@ The evals guard the parts that matter: the trust boundary holds (out-of-network
 and no-assignment suppliers never get shortlisted), the agent escalates instead
 of guessing, coverage never fabricates a "met", gated legs stay gated, and the
 callback never claims coverage. See [DESIGN.md](DESIGN.md) for the full rationale.
+
+For the **deployed voice agent** (telephony, ASR/TTS, latency, interruptions),
+[cekura/](cekura/README.md) drives LLM persona callers into the live number and
+grades the audio against the same trust-boundary rubrics — plus production
+monitoring. Local evals for the logic; Cekura for the voice.
 
 Quick local exercise of the webhook → approve flow:
 
