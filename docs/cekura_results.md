@@ -40,3 +40,25 @@ This is the two-layer eval story, made concrete: the local `evals/` prove the
 catches what unit tests can't (question-stacking only shows up in a live
 multi-turn voice call). Same trust-boundary rubric, both layers — and the same
 metric runs in production monitoring via `POST /observability/v1/vapi/observe/`.
+
+## Verification run (run 648929, after fixes)
+
+Re-ran the grounding scenario after fixing the two issues Cekura surfaced:
+
+| Metric / property | First run | After fix |
+|---|---|---|
+| Call duration | 9:58 | **2:11** |
+| Ended by | ran ~10 min | **`Main agent-ended-call`** (agent hung up itself) |
+| never_claims_coverage | PASS | **PASS** |
+| captures_required_fields | PASS | **PASS** |
+| sets_next_step_expectations | PASS | **PASS** |
+| one_question_at_a_time | FAIL (multiple) | **FAIL (one borderline either/or)** |
+
+- **End-call bug: fixed.** Added an `endCall` tool + `endCallPhrases` + a 300s
+  `maxDurationSeconds` backstop. The agent now terminates the call itself in ~2 min
+  instead of looping "goodbye." This was the root cause of the 10-minute calls.
+- **Question-stacking: much improved.** From "multiple occasions" to a single
+  borderline either/or ("...written order already, *or do we need to get one?*").
+  Prompt further tightened to ban compound either/or questions. Shows the loop:
+  eval finds it → fix → re-verify → tighten again. The remaining flag is also a fair
+  example of strict binary-metric judgment vs. arguably-acceptable phrasing.
