@@ -54,9 +54,19 @@ Beyond pre-deploy simulation, Cekura ingests live calls for observability via
 that gates a deploy also alerts on real traffic. That's the "keep it working with
 many moving parts" story: same rubric, simulation *and* production.
 
-## Also: the Cekura MCP server
+## Cekura MCP server (trigger runs from Claude Code)
 
-Cekura exposes an MCP server (`https://api.cekura.ai/mcp`, header `X-CEKURA-API-KEY`)
-so an agent like Claude Code can trigger runs and review pass/fail without leaving the
-editor — a natural fit for a CI gate or an autonomous "re-run the voice suite after a
-prompt change" loop.
+Cekura exposes an HTTP MCP server so Claude Code can register agents, trigger runs,
+and review pass/fail without leaving the editor — a natural fit for a CI gate or an
+autonomous "re-run the voice suite after a prompt change" loop.
+
+Wired up in [`.mcp.json`](../.mcp.json) (verified: the endpoint returns
+`serverInfo: Cekura API`). The key is referenced as `${CEKURA_API_KEY}` — never
+committed. To activate:
+
+```bash
+export CEKURA_API_KEY=...     # or: export $(grep -v '^#' .env | xargs)
+# then relaunch Claude Code in this repo and approve the project MCP server
+```
+
+Endpoint: `https://api.cekura.ai/mcp`, header `X-CEKURA-API-KEY`.
