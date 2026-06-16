@@ -8,8 +8,26 @@ calls back — with a nurse approval gate on everything that touches liability.
 judgment*. Reads are automated; liability-bearing writes are gated and
 reversible. The agent says "here's what's needed," never "you're covered."
 
-See [PLAN.md](PLAN.md) for the full design and [WRITEUP.md](WRITEUP.md) for the
-1-page writeup.
+### Start here (for reviewers)
+1. **[WRITEUP.md](WRITEUP.md)** — the 1-page deliverable (slice / implementation / tradeoffs).
+2. **Run it in 30s, no keys, no phone:** `pip install -r requirements.txt && python -m sim.run_demo`
+   then `python -m evals.run_evals`.
+3. **[docs/sample_call.md](docs/sample_call.md)** — transcript + recording of a real call to the agent.
+4. Deeper: [DESIGN.md](DESIGN.md) (decision log), [DEFENSE.md](DEFENSE.md) (demo run-of-show), [PLAN.md](PLAN.md).
+
+```mermaid
+flowchart TD
+    A[Patient phone call] -->|Vapi: STT + fast LLM + TTS| B[Intake assistant<br/>captures request, live]
+    B -->|end-of-call| C{Async orchestration<br/>FastAPI}
+    C --> D[Vendor match<br/>Claude · ranked + reasoned]
+    C --> E[PCP nudge · mocked]
+    C --> F[Coverage reqs · rules]
+    D --> G
+    E --> G
+    F --> G
+    G[· · · trust boundary · · ·] --> H[Nurse approval gate]
+    H -->|approved| I[Callback to patient<br/>plan + timeline]
+```
 
 ## What's real / mocked / deterministic
 

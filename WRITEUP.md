@@ -1,6 +1,8 @@
 # DME Voice Agent — Writeup (1 page)
 
-*Structured around the three moves. Fill bracketed bits after the build.*
+*Proven on a real call: a live phone call to the agent captured the request, ran the
+async Claude vendor match, and produced a coordination plan at the nurse gate.
+Transcript + recording in [docs/sample_call.md](docs/sample_call.md).*
 
 ## 1. The slice
 We took the **front door + orchestration handoff**: the voice agent answers the inbound call,
@@ -21,6 +23,11 @@ feed. Tradeoff: those are plumbing and high-liability, not judgment. The interes
 - **Real:** inbound voice (Vapi), extraction, vendor matching, callback, the approval gate.
   **Mocked:** supplier directory, PCP office/EHR, insurance APIs. **Model split:** fast model
   in-conversation (latency = UX), strong model async (quality = matching).
+
+On the real call the agent captured the plan *name* ("Humana Medicare Advantage") but not the
+structured `plan_id`. The Claude match still inferred the network and excluded both trap
+suppliers — more robust to incomplete capture than the deterministic fallback, which keys on
+`plan_id`. A clean example of where AI judgment earns its place.
 
 ## 3. The tradeoffs
 - **Where data would change decisions:** real vendor responsiveness data → learned ranking;
