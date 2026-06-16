@@ -39,8 +39,13 @@ def main() -> int:
             "model": cfg["model"]["model"],
             "temperature": cfg["model"].get("temperature", 0.4),
             "messages": [{"role": "system", "content": system_prompt}],
-            "tools": cfg["model"]["tools"],
+            "tools": cfg["model"]["tools"],  # includes the endCall tool
         },
+        # Let the agent actually hang up, with a hard backstop so a call can never
+        # run away (the goodbye-loop / 10-minute-call bug Cekura surfaced).
+        "endCallFunctionEnabled": cfg.get("endCallFunctionEnabled", True),
+        "endCallPhrases": cfg.get("endCallPhrases", []),
+        "maxDurationSeconds": cfg.get("maxDurationSeconds", 300),
     }
 
     headers = {"Authorization": f"Bearer {key}"}

@@ -80,22 +80,31 @@ Endpoints:
 - `POST /plans/{id}/approve` — fires the gated legs + patient callback
 - `POST /plans/{id}/reject?reason=...`
 
-## Verify the behavior (evals)
+## Evals & monitoring — three layers
+
+The same trust boundary is guarded at three levels, from fast/cheap to full-fidelity:
+
+| Layer | What it checks | Cost | Where |
+|---|---|---|---|
+| **Backend policy** | trust boundary, escalation, gating, coverage never fabricated | instant, no key | `evals/run_evals.py` (6/6) |
+| **Live conversation** | extraction + never-claims-coverage under adversarial turns | Anthropic API | `evals/conversation_evals.py` |
+| **Deployed voice agent** | the real Vapi agent on telephony: ASR/TTS, latency, interruptions, drift | persona calls (Cekura) | [`cekura/`](cekura/README.md) |
 
 ```bash
-python -m evals.run_evals          # 6 evals; asserts the policy, not a model's phrasing
-ANTHROPIC_API_KEY=... python -m evals.run_evals   # same suite, AI vendor-matching path
+python -m evals.run_evals            # backend policy
+python -m evals.conversation_evals   # +ANTHROPIC_API_KEY for the live layer
 ```
 
-The evals guard the parts that matter: the trust boundary holds (out-of-network
-and no-assignment suppliers never get shortlisted), the agent escalates instead
-of guessing, coverage never fabricates a "met", gated legs stay gated, and the
-callback never claims coverage. See [DESIGN.md](DESIGN.md) for the full rationale.
+**Cekura** ([cekura/README.md](cekura/README.md)) drives LLM-persona callers into the
+live number and grades the audio against the *same* trust-boundary rubrics — then
+monitors production traffic with them. A real run ([docs/cekura_results.md](docs/cekura_results.md)):
+the safety-critical `never_claims_coverage` metric **held under an adversarial
+coverage-pressure caller**, and the suite **caught a real UX regression**
+(`one_question_at_a_time`) that was then fixed. Local evals for the logic; Cekura for
+the voice; same rubric in production monitoring.
 
-For the **deployed voice agent** (telephony, ASR/TTS, latency, interruptions),
-[cekura/](cekura/README.md) drives LLM persona callers into the live number and
-grades the audio against the same trust-boundary rubrics — plus production
-monitoring. Local evals for the logic; Cekura for the voice.
+You can also trigger Cekura runs from Claude Code via its MCP server (wired in
+[`.mcp.json`](.mcp.json)).
 
 Quick local exercise of the webhook → approve flow:
 

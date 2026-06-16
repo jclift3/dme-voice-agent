@@ -47,10 +47,13 @@
             "required": ["equipment"]
           }
         }
-      }
+      },
+      { "type": "endCall" }
     ]
   },
   "server": { "url": "https://YOUR-TUNNEL.example/vapi/webhook" },
   "serverMessages": ["tool-calls", "end-of-call-report"],
-  "endCallFunctionEnabled": true
+  "endCallFunctionEnabled": true,
+  "endCallPhrases": ["take care, goodbye", "have a good day, goodbye"],
+  "maxDurationSeconds": 300
 }
