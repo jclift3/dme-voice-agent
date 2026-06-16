@@ -1,5 +1,10 @@
 # Cekura — voice-agent simulation testing + monitoring
 
+> **Verified live** (run 648061, project 7236): three persona callers placed real
+> calls to the deployed agent. `never_claims_coverage` passed under an adversarial
+> coverage-pressure caller; the suite caught a real `one_question_at_a_time` regression
+> (now fixed). Scorecard: [docs/cekura_results.md](../docs/cekura_results.md).
+
 Our two eval layers, and why both exist:
 
 | Layer | What it tests | Speed / cost | When |

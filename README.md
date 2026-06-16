@@ -12,7 +12,7 @@ reversible. The agent says "here's what's needed," never "you're covered."
 1. **[WRITEUP.md](WRITEUP.md)** — the 1-page deliverable (slice / implementation / tradeoffs).
 2. **Run it in 30s, no keys, no phone:** `pip install -r requirements.txt && python -m sim.run_demo`
    then `python -m evals.run_evals`.
-3. **[docs/sample_call.md](docs/sample_call.md)** — transcript + recording of a real call to the agent.
+3. **[docs/sample_call.md](docs/sample_call.md)** — transcript of a real call; **[docs/cekura_results.md](docs/cekura_results.md)** — graded results from Cekura persona-call simulations.
 4. Deeper: [DESIGN.md](DESIGN.md) (decisions + defense kit), [cekura/README.md](cekura/README.md) (voice-eval layer), [docs/demo_script.md](docs/demo_script.md).
 
 ```mermaid
