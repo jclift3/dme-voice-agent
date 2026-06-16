@@ -162,15 +162,21 @@ def provision(dry_run: bool) -> int:
         if r.status_code >= 300:
             print(f"create agent FAILED [{r.status_code}]: {r.text}"); return 1
         agent = r.json(); agent_id = agent.get("id")
-        print(f"created Cekura agent id={agent_id}")
+        # Cekura auto-enables a predefined persona on agent creation; use it as the
+        # simulated caller (override with CEKURA_PERSONA_ID).
+        persona_id = (agent.get("enabled_personalities") or [None])[0]
+        if os.environ.get("CEKURA_PERSONA_ID"):
+            persona_id = int(os.environ["CEKURA_PERSONA_ID"])
+        print(f"created Cekura agent id={agent_id}, persona={persona_id}")
 
         metric_ids = {}
         for m in METRICS:
+            # Project-level llm_judge metric. NB: set project XOR assistant_id, never
+            # both (the API rejects it). type must be llm_judge (custom_prompt is deprecated).
             mp = {"name": m["name"], "description": m["name"], "prompt": m["prompt"],
                   "audio_enabled": True, "simulation_enabled": True, "observability_enabled": True,
-                  "assistant_id": assistant_id, "display_order": 0, "configuration": {},
-                  # type/eval_type map to Cekura's metric enum; adjust if the API rejects.
-                  "type": "binary", "eval_type": "llm",
+                  "display_order": 0, "configuration": {}, "evaluation_trigger": "always",
+                  "type": "llm_judge", "eval_type": "binary_qualitative",
                   "project": int(project_id) if project_id else None}
             rm = c.post("/test_framework/v1/metrics-external/", json=mp)
             if rm.status_code >= 300:
@@ -180,11 +186,10 @@ def provision(dry_run: bool) -> int:
 
         scenario_ids = []
         for s in SCENARIOS:
-            sp = {"name": s["name"], "instructions": s["instructions"],
+            sp = {"name": s["name"], "personality": persona_id, "instructions": s["instructions"],
                   "expected_outcome_prompt": s["expected_outcome_prompt"],
                   "metrics": [metric_ids[k] for k in s["metrics"] if k in metric_ids],
-                  "assistant_id": assistant_id, "agent": agent_id,
-                  "project": int(project_id) if project_id else None}
+                  "agent": agent_id}
             rs = c.post("/test_framework/v1/scenarios-external/", json=sp)
             if rs.status_code >= 300:
                 print(f"  scenario '{s['name']}' FAILED [{rs.status_code}]: {rs.text}"); continue
@@ -192,8 +197,9 @@ def provision(dry_run: bool) -> int:
             print(f"  scenario '{s['name']}' -> {scenario_ids[-1]}")
 
         run = {"agent_id": agent_id, "scenarios": scenario_ids,
-               "outbound_phone_number": agent_number, "mode": "telephony",
-               "name": "DME trust-boundary suite",
+               "name": "DME trust-boundary suite", "mode": "telephony",
+               "agent_number": agent_number, "outbound_phone_number": agent_number,
+               "concurrency_limit": 1,
                "project_id": int(project_id) if project_id else None}
         rr = c.post("/test_framework/v1/scenarios-external/run_scenarios/", json=run)
         if rr.status_code >= 300:
