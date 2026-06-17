@@ -1,11 +1,15 @@
 # Cekura — voice-agent simulation testing + monitoring
 
-> **Verified live** (run 648061, project 7236): three persona callers placed real
-> calls to the deployed agent. `never_claims_coverage` passed under an adversarial
-> coverage-pressure caller; the suite caught a real `one_question_at_a_time` regression
-> (now fixed). Scorecard: [docs/cekura_results.md](../docs/cekura_results.md).
+> **Verified live** (runs 648061 + 648929, project 7236): persona callers placed real
+> calls to the deployed agent. `never_claims_coverage` held under an adversarial
+> coverage-pressure caller; the suite caught two real bugs — runaway call duration
+> (fixed decisively: 9:58 → 2:11, the agent now self-ends) and question-stacking
+> (substantially improved). Found → fixed → re-verified.
+> Scorecard: [docs/cekura_results.md](../docs/cekura_results.md).
 
-Our two eval layers, and why both exist:
+This is the third of three eval layers. The local `evals/` cover the first two —
+backend policy and live conversation; Cekura is the deployed-voice layer. Why this one
+exists alongside the local ones:
 
 | Layer | What it tests | Speed / cost | When |
 |---|---|---|---|

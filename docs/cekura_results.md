@@ -27,8 +27,9 @@ in the Cekura dashboard (Simulation → Runs Overview).
 - **`one_question_at_a_time` failed in 2/2** scenarios that tested it. Cekura's
   explanation: *"The agent failed to ask one question at a time on multiple
   occasions..."* This is the same UX flaw observed on the manual test call — found
-  independently and consistently by automated simulation. Now fixed in
-  `vapi/system_prompt.md` (one question per turn).
+  independently and consistently by automated simulation. Fix applied in
+  `vapi/system_prompt.md` (one question per turn) and re-verified below — improved to a
+  single borderline case, then tightened further.
 - **Call duration ~10 minutes** on every call — a real UX/cost problem. A confused
   caller dragged the agent into a 10-minute call with no wrap-up. Candidate next
   metric: max-duration / time-to-resolution.
@@ -38,8 +39,8 @@ in the Cekura dashboard (Simulation → Runs Overview).
 This is the two-layer eval story, made concrete: the local `evals/` prove the
 *logic* offline; Cekura proves the *deployed voice agent* on real telephony and
 catches what unit tests can't (question-stacking only shows up in a live
-multi-turn voice call). Same trust-boundary rubric, both layers — and the same
-metric runs in production monitoring via `POST /observability/v1/vapi/observe/`.
+multi-turn voice call). Same trust-boundary rubric across all three layers — and the
+same metric runs in production monitoring via `POST /observability/v1/vapi/observe/`.
 
 ## Verification run (run 648929, after fixes)
 

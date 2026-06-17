@@ -14,8 +14,8 @@ place a live call.
 - Natural intake: equipment, plan, ZIP, callback number captured from messy speech.
 - **An honest UX finding:** the agent front-loaded several questions at once; the
   caller pushed back ("can you ask them one by one?") and the agent recovered
-  ("You're absolutely right... let me slow down"). Real, and worth fixing — see
-  DESIGN.md §6. The fix is a prompt constraint to ask one question per turn.
+  ("You're absolutely right... let me slow down"). This became a Cekura metric
+  (`one_question_at_a_time`) and a prompt fix — see [cekura_results.md](cekura_results.md).
 - The structured result this produced is plan `plan_b2199151`: `plan_id` was left
   null (only the spoken plan *name* was captured), yet the async Claude match still
   inferred the Humana MA PPO network and excluded both trap suppliers correctly.

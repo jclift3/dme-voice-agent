@@ -46,8 +46,10 @@ for the logic, Cekura for the voice. That's how this stays working with many mov
 parts."*
 
 **[3:00 — Close]**
-*"Full thread, real call, AI judgment that's provably right on the traps, and an eval
-stack that guards both layers. Happy to dig into any decision."*
+*"Full thread, real call, AI judgment that's provably right on the traps, and a
+three-layer eval stack — which already caught two bugs on the deployed agent, the call
+not terminating and question-stacking, both of which I fixed. Happy to dig into any
+decision."*
 
 ---
 

@@ -5,10 +5,12 @@ async Claude vendor match, and produced a coordination plan at the nurse gate.
 Transcript + recording in [docs/sample_call.md](docs/sample_call.md).*
 
 ## 1. The slice
-We took the **front door + orchestration handoff**: the voice agent answers the inbound call,
-captures a structured request, and decides what proceeds automatically vs. what is gated. We
-built **one async leg for real** — in-network vendor research/matching — and **closed the loop
-with a callback**.
+**The thesis:** the agent owns *coordination*, not *clinical or coverage judgment* — reads are
+automated, liability-bearing writes are gated and reversible, and it says "here's what's needed,"
+never "you're covered." We took the **front door + orchestration handoff**: the voice agent
+answers the inbound call, captures a structured request, and decides what proceeds automatically
+vs. what is gated. We built **one async leg for real** — in-network vendor research/matching —
+and **closed the loop with a callback**.
 
 We did **not** build the live PCP/EHR order write, the insurance coding loop, or a real supplier
 feed. Tradeoff: those are plumbing and high-liability, not judgment. The interesting decisions —
@@ -37,6 +39,11 @@ suppliers — more robust to incomplete capture than the deterministic fallback,
   accessibility (non-English, hard-of-hearing); PHI on the call; silent async failure where no
   callback ever happens. Our mitigations: hard no-coverage-claims rule, confidence-gated
   human routing, and approval gates on writes.
+- **How we keep it safe with many moving parts:** three eval layers guard the trust boundary —
+  backend policy, live-conversation guardrails, and Cekura persona-call simulation on the
+  *deployed* voice agent (plus production monitoring on the same rubric). A real Cekura run held
+  the no-coverage metric under an adversarial caller and caught two bugs (a non-terminating call;
+  question-stacking) that we then fixed — see [docs/cekura_results.md](docs/cekura_results.md).
 
 ---
 ### Demo run-of-show

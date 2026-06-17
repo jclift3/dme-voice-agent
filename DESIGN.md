@@ -1,9 +1,9 @@
 # DME Voice Agent — design rationale & decision log
 
 This is the "why" document: what we built, the choices we made, the alternatives
-we rejected, and the tradeoffs we'd defend. [PLAN.md](PLAN.md) is the build plan,
-[WRITEUP.md](WRITEUP.md) is the 1-page deliverable, [README.md](README.md) is how
-to run it. This is the narrative that connects the code to the thinking.
+we rejected, and the tradeoffs we'd defend. [WRITEUP.md](WRITEUP.md) is the 1-page
+deliverable, [README.md](README.md) is how to run it. This is the narrative that
+connects the code to the thinking.
 
 ---
 
@@ -181,14 +181,23 @@ Each row: the choice, what we rejected, and why.
 - **Console (`/`)** — the trust boundary made clickable; approve a plan and watch
   the gated legs fire and the callback script appear.
 
-### Two eval layers (logic vs. voice)
-- **`evals/`** — fast, no telephony, no key. Backend policy + a few live conversation
-  turns. Runs in CI.
-- **`cekura/`** — Cekura drives LLM persona callers into the *deployed* Vapi number and
-  grades the audio against the same trust-boundary rubrics, then monitors production.
-  Catches what local evals can't: interruptions, ASR/TTS, latency, drift on real audio.
-  See [cekura/README.md](cekura/README.md). The `one_question_at_a_time` metric exists
-  because the first real call surfaced exactly that bug.
+### Three eval layers (logic → voice)
+1. **Backend policy** (`evals/run_evals.py`) — trust boundary, escalation, gating,
+   coverage never fabricated. Instant, no key; asserts the policy not the phrasing, so
+   it passes on both the Claude and fallback paths.
+2. **Live conversation** (`evals/conversation_evals.py`) — extraction + never-claims-
+   coverage under adversarial turns (Anthropic API).
+3. **Deployed voice agent** (`cekura/`) — Cekura drives LLM persona callers into the
+   *deployed* Vapi number and grades the audio against the same trust-boundary rubrics,
+   then monitors production. Catches what the local layers can't: interruptions, ASR/TTS,
+   latency, drift, call-handling. See [cekura/README.md](cekura/README.md).
+
+**The loop paid off.** A real Cekura run surfaced two bugs on the deployed agent: the
+call never terminated (~10-minute calls / a goodbye loop) and the agent stacked
+questions. We fixed the first decisively (an `endCall` tool + a 300 s cap → 9:58 → 2:11,
+agent self-ends) and substantially improved the second — while the safety-critical
+`never_claims_coverage` metric held throughout, including under an adversarial
+coverage-pressure caller. Found → fixed → re-verified: [docs/cekura_results.md](docs/cekura_results.md).
 
 ---
 

@@ -99,9 +99,10 @@ python -m evals.conversation_evals   # +ANTHROPIC_API_KEY for the live layer
 live number and grades the audio against the *same* trust-boundary rubrics — then
 monitors production traffic with them. A real run ([docs/cekura_results.md](docs/cekura_results.md)):
 the safety-critical `never_claims_coverage` metric **held under an adversarial
-coverage-pressure caller**, and the suite **caught a real UX regression**
-(`one_question_at_a_time`) that was then fixed. Local evals for the logic; Cekura for
-the voice; same rubric in production monitoring.
+coverage-pressure caller**, and the suite **caught two real bugs** on the deployed
+agent — the call never terminating (~10-min calls; fixed decisively → ~2 min, the agent
+self-ends) and question-stacking (substantially improved). Found → fixed → re-verified.
+Same rubric runs in production monitoring.
 
 You can also trigger Cekura runs from Claude Code via its MCP server (wired in
 [`.mcp.json`](.mcp.json)).
