@@ -49,6 +49,7 @@ def match_vendors(intake: IntakeRequest) -> VendorMatch:
 # AI path — Claude with structured output
 # ---------------------------------------------------------------------------
 
+
 def _match_with_claude(intake: IntakeRequest, suppliers: list[dict]) -> VendorMatch:
     import anthropic
 
@@ -66,7 +67,8 @@ def _match_with_claude(intake: IntakeRequest, suppliers: list[dict]) -> VendorMa
         "and have few complaints.\n"
         "  - A supplier that is in-network but does NOT accept assignment, is far, or has "
         "high complaints should be ranked low or excluded with a clear reason.\n"
-        "  - Backordered-but-in-network suppliers can be offered only as a wait-if-needed option.\n\n"
+        "  - Backordered-but-in-network suppliers can be offered only as a "
+        "wait-if-needed option.\n\n"
         "Give each shortlisted vendor a one-sentence rationale a nurse can verify. "
         "Do not invent suppliers or fields.\n\n"
         f"PATIENT:\n{intake.model_dump_json(indent=2)}\n\n"
@@ -93,6 +95,7 @@ def _match_with_claude(intake: IntakeRequest, suppliers: list[dict]) -> VendorMa
 # Deterministic fallback — transparent scoring (also our oracle for tests)
 # ---------------------------------------------------------------------------
 
+
 def _match_deterministic(intake: IntakeRequest, suppliers: list[dict]) -> VendorMatch:
     plan = intake.plan_id
     eq = intake.equipment
@@ -102,16 +105,23 @@ def _match_deterministic(intake: IntakeRequest, suppliers: list[dict]) -> Vendor
 
     for s in suppliers:
         if plan and plan not in s["in_network_plan_ids"]:
-            excluded.append(ExcludedVendor(id=s["id"], name=s["name"],
-                                           reason=f"Not in-network for {plan}."))
+            excluded.append(
+                ExcludedVendor(id=s["id"], name=s["name"], reason=f"Not in-network for {plan}.")
+            )
             continue
         if eq not in s.get("stocks", []):
-            excluded.append(ExcludedVendor(id=s["id"], name=s["name"],
-                                           reason=f"Does not carry {eq}."))
+            excluded.append(
+                ExcludedVendor(id=s["id"], name=s["name"], reason=f"Does not carry {eq}.")
+            )
             continue
         if not s.get("accepts_medicare_assignment", True):
-            excluded.append(ExcludedVendor(id=s["id"], name=s["name"],
-                                           reason="Does not accept Medicare assignment (higher patient cost)."))
+            excluded.append(
+                ExcludedVendor(
+                    id=s["id"],
+                    name=s["name"],
+                    reason="Does not accept Medicare assignment (higher patient cost).",
+                )
+            )
             continue
 
         in_stock = bool(s.get("in_stock_now", {}).get(eq, False))
@@ -127,16 +137,25 @@ def _match_deterministic(intake: IntakeRequest, suppliers: list[dict]) -> Vendor
     ranked = []
     for i, (_, s) in enumerate(shortlist, start=1):
         stock_txt = "in stock" if s["_in_stock"] else "backordered"
-        ranked.append(RankedVendor(
-            id=s["id"], name=s["name"], rank=i, in_network=True,
-            in_stock=s["_in_stock"], distance_mi=s.get("distance_mi", 0.0),
-            rationale=(f"In-network, {stock_txt}, {s.get('avg_callback_hours','?')}h avg callback, "
-                       f"{s.get('distance_mi','?')} mi away."),
-        ))
+        ranked.append(
+            RankedVendor(
+                id=s["id"],
+                name=s["name"],
+                rank=i,
+                in_network=True,
+                in_stock=s["_in_stock"],
+                distance_mi=s.get("distance_mi", 0.0),
+                rationale=(
+                    f"In-network, {stock_txt}, {s.get('avg_callback_hours', '?')}h avg callback, "
+                    f"{s.get('distance_mi', '?')} mi away."
+                ),
+            )
+        )
 
     summary = (
         f"{len(ranked)} in-network option(s) for {eq}; "
-        f"{len(excluded)} excluded. Top pick: {ranked[0].name}." if ranked
+        f"{len(excluded)} excluded. Top pick: {ranked[0].name}."
+        if ranked
         else f"No in-network supplier found for {eq} — escalate to a nurse."
     )
     return VendorMatch(shortlist=ranked, excluded=excluded, summary=summary, used_ai=False)

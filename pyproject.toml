@@ -1,0 +1,22 @@
+[project]
+name = "dme-voice-agent"
+version = "0.1.0"
+description = "Voice agent for Medicare DME coordination — a take-home learning artifact."
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.15"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# A clean, opinionated set: pyflakes, pycodestyle, imports, bugbear, pyupgrade,
+# comprehensions, simplify. Strict enough to keep the code pristine, not noisy.
+select = ["E", "F", "W", "I", "B", "UP", "C4", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore:Using `httpx`:UserWarning"]

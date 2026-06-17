@@ -33,11 +33,18 @@ def send_callback(to_number: str | None, script: str) -> dict:
             "customer": {"number": to_number},
             "assistant": {
                 "firstMessage": script,
-                "model": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001",
-                          "messages": [{"role": "system",
-                                        "content": "Read the first message, answer brief "
-                                        "follow-up questions, never state coverage decisions, "
-                                        "and offer a nurse callback for anything clinical."}]},
+                "model": {
+                    "provider": "anthropic",
+                    "model": "claude-haiku-4-5-20251001",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "Read the first message, answer brief "
+                            "follow-up questions, never state coverage decisions, "
+                            "and offer a nurse callback for anything clinical.",
+                        }
+                    ],
+                },
             },
         },
         timeout=20.0,

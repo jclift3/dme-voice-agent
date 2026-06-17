@@ -23,10 +23,20 @@ _RULES: dict[str, dict] = {
         "headline": "A standard wheelchair is covered under Part B as DME when these are in place:",
         "cms_reference": CMS_WHEELCHAIR,
         "requirements": [
-            ("face_to_face", "Recent face-to-face exam with the treating provider documenting the mobility need."),
+            (
+                "face_to_face",
+                "Recent face-to-face exam with the treating provider "
+                "documenting the mobility need.",
+            ),
             ("written_order", "A written order (prescription) from the PCP sent to the supplier."),
-            ("in_network_supplier", "A Medicare-enrolled supplier that accepts assignment (lowest out-of-pocket)."),
-            ("home_mobility_need", "The need is for mobility within the home that a cane or walker can't resolve."),
+            (
+                "in_network_supplier",
+                "A Medicare-enrolled supplier that accepts assignment (lowest out-of-pocket).",
+            ),
+            (
+                "home_mobility_need",
+                "The need is for mobility within the home that a cane or walker can't resolve.",
+            ),
         ],
     },
     # Other equipment reuses a generic template; extend as needed.
@@ -51,7 +61,7 @@ def coverage_requirements(intake: IntakeRequest) -> CoverageChecklist:
         "face_to_face": intake.recent_visit,
         "written_order": intake.has_order,
         "in_network_supplier": None,  # decided by the vendor-matching leg
-        "home_mobility_need": None,   # clinical — PCP, not us
+        "home_mobility_need": None,  # clinical — PCP, not us
     }
 
     reqs = [

@@ -13,9 +13,8 @@ The sim harness (sim/run_demo.py) exercises all of this without telephony.
 
 from __future__ import annotations
 
-from typing import Any
-
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
@@ -35,6 +34,7 @@ def console() -> FileResponse:
     """The nurse console — the trust boundary, made clickable."""
     return FileResponse(_CONSOLE)
 
+
 # Per-call intake buffers, keyed by Vapi call id. The agent may fill the request
 # across several tool calls during one conversation.
 _CALL_BUFFERS: dict[str, dict[str, Any]] = {}
@@ -48,6 +48,7 @@ def health() -> dict:
 # ---------------------------------------------------------------------------
 # Vapi webhook
 # ---------------------------------------------------------------------------
+
 
 @app.post("/vapi/webhook")
 async def vapi_webhook(payload: dict) -> JSONResponse:
@@ -78,24 +79,27 @@ def _handle_tool_calls(message: dict) -> dict:
         args = fn.get("arguments") or {}
         if isinstance(args, str):
             import json
+
             args = json.loads(args or "{}")
 
         if name == "capture_request":
             buf = _CALL_BUFFERS.setdefault(call_id, {})
             buf.update({k: v for k, v in args.items() if v is not None})
-            results.append({"toolCallId": tc.get("id"),
-                            "result": "Captured. Continue gathering anything still missing."})
+            results.append(
+                {
+                    "toolCallId": tc.get("id"),
+                    "result": "Captured. Continue gathering anything still missing.",
+                }
+            )
 
         elif name == "coverage_requirements":
             equip = args.get("equipment") or _CALL_BUFFERS.get(call_id, {}).get("equipment", "")
             checklist = coverage_requirements(IntakeRequest(equipment=equip))
             steps = "; ".join(r.detail for r in checklist.requirements)
             # NOTE: phrased as steps, never as a coverage decision.
-            results.append({"toolCallId": tc.get("id"),
-                            "result": f"{checklist.headline} {steps}"})
+            results.append({"toolCallId": tc.get("id"), "result": f"{checklist.headline} {steps}"})
         else:
-            results.append({"toolCallId": tc.get("id"),
-                            "result": f"Unknown tool {name}"})
+            results.append({"toolCallId": tc.get("id"), "result": f"Unknown tool {name}"})
     return {"results": results}
 
 
@@ -106,13 +110,13 @@ def _handle_end_of_call(message: dict) -> dict:
         return {"ok": True, "note": "no equipment captured; nothing to coordinate"}
     intake = IntakeRequest(**buf)
     plan = store.build_plan(intake)  # async coordination happens here
-    return {"ok": True, "plan_id": plan.plan_id,
-            "escalated": plan.escalated_to_human}
+    return {"ok": True, "plan_id": plan.plan_id, "escalated": plan.escalated_to_human}
 
 
 # ---------------------------------------------------------------------------
 # Nurse console
 # ---------------------------------------------------------------------------
+
 
 @app.get("/plans")
 def list_plans() -> list[dict]:
@@ -151,18 +155,34 @@ def reject(plan_id: str, reason: str = "") -> JSONResponse:
 # ---------------------------------------------------------------------------
 
 _SCENARIOS = {
-    "happy": dict(
-        equipment="standard_wheelchair", plan_id="HUM-MA-PPO",
-        plan_name="Humana Medicare Advantage PPO", zip="78704", pcp_name="Dr. Alvarez",
-        recent_visit=True, has_order=False, urgency="soon",
-        patient_callback_number="+15125550142", confidence=0.95,
-        notes="First-time DME user; anxious about cost."),
-    "no_vendor": dict(
-        equipment="standard_wheelchair", plan_id="CIGNA-MA-HMO", zip="78704",
-        recent_visit=True, has_order=False, confidence=0.9),
-    "low_conf": dict(
-        equipment="standard_wheelchair", plan_id="HUM-MA-PPO", zip="78704",
-        confidence=0.35, notes="Caller hard to hear; plan and order status unclear."),
+    "happy": {
+        "equipment": "standard_wheelchair",
+        "plan_id": "HUM-MA-PPO",
+        "plan_name": "Humana Medicare Advantage PPO",
+        "zip": "78704",
+        "pcp_name": "Dr. Alvarez",
+        "recent_visit": True,
+        "has_order": False,
+        "urgency": "soon",
+        "patient_callback_number": "+15125550142",
+        "confidence": 0.95,
+        "notes": "First-time DME user; anxious about cost.",
+    },
+    "no_vendor": {
+        "equipment": "standard_wheelchair",
+        "plan_id": "CIGNA-MA-HMO",
+        "zip": "78704",
+        "recent_visit": True,
+        "has_order": False,
+        "confidence": 0.9,
+    },
+    "low_conf": {
+        "equipment": "standard_wheelchair",
+        "plan_id": "HUM-MA-PPO",
+        "zip": "78704",
+        "confidence": 0.35,
+        "notes": "Caller hard to hear; plan and order status unclear.",
+    },
 }
 
 

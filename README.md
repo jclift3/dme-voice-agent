@@ -114,6 +114,19 @@ python -c "from fastapi.testclient import TestClient; from app.main import app; 
 print(c.post('/vapi/webhook', json={'message':{'type':'tool-calls','call':{'id':'c1'},'toolCallList':[{'id':'t1','function':{'name':'capture_request','arguments':{'equipment':'standard_wheelchair','plan_id':'HUM-MA-PPO','confidence':0.95}}}]}}).json())"
 ```
 
+## Tests & linting
+
+```bash
+pip install -e ".[dev]"                              # pytest + ruff
+python -m pytest                                     # unit + functional tests
+python -m ruff check . && python -m ruff format --check .
+```
+
+`tests/` holds **unit** tests (coverage rules, vendor matching, the approval gate) and
+**functional** tests (the Vapi webhook → plan → approve flow via `TestClient`); `evals/`
+holds the **policy + voice** evals. Style is enforced by ruff, configured in
+[`pyproject.toml`](pyproject.toml).
+
 ## Wire up real voice (Vapi)
 
 1. Create an assistant from `vapi/assistant.json` (paste `vapi/system_prompt.md`

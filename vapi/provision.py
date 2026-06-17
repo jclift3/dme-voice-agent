@@ -57,8 +57,7 @@ def main() -> int:
         aid = r.json()["id"]
         print(f"created assistant: {aid}")
 
-        r2 = c.patch(f"{API}/phone-number/{phone_id}", headers=headers,
-                     json={"assistantId": aid})
+        r2 = c.patch(f"{API}/phone-number/{phone_id}", headers=headers, json={"assistantId": aid})
         if r2.status_code >= 300:
             print(f"attach to phone-number FAILED [{r2.status_code}]:\n{r2.text}")
             return 1

@@ -52,9 +52,12 @@ def build_plan(intake: IntakeRequest) -> CoordinationPlan:
             name="pcp_order_nudge",
             status="drafted" if pcp_needed else "not_needed",
             gated=True,  # sending anything to the PCP is a write — gate it
-            detail=("Draft order-nudge queued for nurse to send to PCP "
-                    f"({intake.pcp_name or 'PCP on file'})." if pcp_needed
-                    else "Order already exists; no nudge needed."),
+            detail=(
+                "Draft order-nudge queued for nurse to send to PCP "
+                f"({intake.pcp_name or 'PCP on file'})."
+                if pcp_needed
+                else "Order already exists; no nudge needed."
+            ),
         ),
         PlanLeg(
             name="patient_callback",
@@ -77,12 +80,14 @@ def build_plan(intake: IntakeRequest) -> CoordinationPlan:
         plan.escalated_to_human = True
         plan.escalation_reason = (
             f"Low extraction confidence ({intake.confidence:.2f}) — nurse should "
-            "review the captured request before anything proceeds.")
+            "review the captured request before anything proceeds."
+        )
     elif not vendors.shortlist:
         plan.escalated_to_human = True
         plan.escalation_reason = (
             "No in-network supplier found — nurse should research manually and "
-            "set honest expectations with the patient.")
+            "set honest expectations with the patient."
+        )
 
     _PLANS[plan_id] = plan
     return plan
@@ -116,13 +121,20 @@ def _build_callback_script(plan: CoordinationPlan) -> str:
     top = plan.vendors.shortlist[0] if plan.vendors.shortlist else None
     eq = plan.intake.equipment.replace("_", " ")
     if top is None:
-        return (f"Hi, this is your care team following up about your {eq}. We weren't "
-                "able to confirm an in-network supplier yet, so a nurse is looking into "
-                "it personally and will call you back. You don't need to do anything yet.")
-    pcp_line = (" Your provider still needs to sign the order, and we've queued a request "
-                "to their office." if not plan.intake.has_order else "")
-    return (f"Hi, this is your care team following up about your {eq}. We found "
-            f"{len(plan.vendors.shortlist)} in-network supplier(s) for your plan — the best "
-            f"fit is {top.name}, which has it in stock.{pcp_line} "
-            "We'll coordinate the next steps and keep you updated. Here's what's needed from "
-            "you: nothing right now — we'll reach out if we need anything.")
+        return (
+            f"Hi, this is your care team following up about your {eq}. We weren't "
+            "able to confirm an in-network supplier yet, so a nurse is looking into "
+            "it personally and will call you back. You don't need to do anything yet."
+        )
+    pcp_line = (
+        " Your provider still needs to sign the order, and we've queued a request to their office."
+        if not plan.intake.has_order
+        else ""
+    )
+    return (
+        f"Hi, this is your care team following up about your {eq}. We found "
+        f"{len(plan.vendors.shortlist)} in-network supplier(s) for your plan — the best "
+        f"fit is {top.name}, which has it in stock.{pcp_line} "
+        "We'll coordinate the next steps and keep you updated. Here's what's needed from "
+        "you: nothing right now — we'll reach out if we need anything."
+    )

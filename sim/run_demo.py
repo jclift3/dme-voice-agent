@@ -27,7 +27,9 @@ def show_plan(plan) -> None:
         mark = {True: "[x]", False: "[ ]", None: "[?]"}[r.met]
         print(f"   {mark} {r.detail}")
 
-    print(f"\nVENDOR MATCH ({'AI / Claude' if plan.vendors.used_ai else 'deterministic fallback'}):")
+    print(
+        f"\nVENDOR MATCH ({'AI / Claude' if plan.vendors.used_ai else 'deterministic fallback'}):"
+    )
     print(f"  {plan.vendors.summary}")
     for v in plan.vendors.shortlist:
         stock = "in stock" if v.in_stock else "backordered"
@@ -67,9 +69,10 @@ def scenario_happy_path() -> None:
     print("\n>>> Nurse reviews and APPROVES the plan...")
     store.approve_plan(plan.plan_id)
     from app.callback import send_callback
+
     send_callback(intake.patient_callback_number, plan.callback_script)
     print("Callback script (note: states next steps, never 'you are covered'):")
-    print(f"  \"{plan.callback_script}\"")
+    print(f'  "{plan.callback_script}"')
 
 
 def scenario_no_in_network() -> None:
@@ -79,7 +82,10 @@ def scenario_no_in_network() -> None:
     intake = IntakeRequest(
         equipment="standard_wheelchair",
         plan_id="CIGNA-MA-HMO",  # not in any supplier's network
-        zip="78704", recent_visit=True, has_order=False, confidence=0.9,
+        zip="78704",
+        recent_visit=True,
+        has_order=False,
+        confidence=0.9,
     )
     plan = store.build_plan(intake)
     show_plan(plan)
@@ -90,8 +96,12 @@ def scenario_low_confidence() -> None:
     print("SCENARIO 3 — failure path: low-confidence extraction routes to human")
     print(LINE)
     intake = IntakeRequest(
-        equipment="standard_wheelchair", plan_id="HUM-MA-PPO", zip="78704",
-        recent_visit=None, has_order=None, confidence=0.35,
+        equipment="standard_wheelchair",
+        plan_id="HUM-MA-PPO",
+        zip="78704",
+        recent_visit=None,
+        has_order=None,
+        confidence=0.35,
         notes="Caller hard to hear; plan and order status unclear.",
     )
     plan = store.build_plan(intake)
