@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "dme-voice-agent"
 version = "0.1.0"
@@ -6,6 +10,11 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.15"]
+
+# This is a runnable app (modules run via `python -m ...`), not a packaged library —
+# so install nothing on `pip install -e .`; we only want the dev tools + tool config.
+[tool.setuptools]
+py-modules = []
 
 [tool.ruff]
 line-length = 100
