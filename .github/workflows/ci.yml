@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          pip install -r requirements.txt
+          pip install -e ".[dev]"
+      - name: Lint + format
+        run: |
+          python -m ruff check .
+          python -m ruff format --check .
+      - name: Tests
+        run: python -m pytest
+      # Policy evals + a clean demo run — all on the no-key deterministic paths.
+      - name: Evals + demo
+        run: |
+          python -m evals.run_evals
+          python -m evals.conversation_evals
+          python -m sim.run_demo
