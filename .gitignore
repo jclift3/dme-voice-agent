@@ -7,7 +7,7 @@ venv/
 .pytest_cache/
 .ruff_cache/
 
-# Secrets — never commit keys (Vapi, Anthropic)
+# Secrets, never commit keys (Vapi, Anthropic)
 .env
 .env.*
 !.env.example

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>DME coordination — nurse console</title>
+<title>DME coordination: nurse console</title>
 <style>
   :root {
     --bg:#f7f6f3; --card:#fff; --ink:#1f2328; --muted:#6b7280; --line:#e5e7eb;
@@ -65,7 +65,7 @@
 <body>
 <header>
   <div>
-    <h1>DME coordination — nurse console</h1>
+    <h1>DME coordination: nurse console</h1>
     <div class="sub">Reads are automated. Everything below the trust boundary needs your approval.</div>
   </div>
   <div class="spacer"></div>
@@ -93,7 +93,7 @@ function vendorRow(v){
 }
 function legRow(l){
   const tag = l.gated?`<span class="tag gated">GATED</span>`:`<span class="tag auto">AUTO</span>`;
-  return `<div class="leg">${tag}<span>${esc(l.name)} — <span class="det">${esc(l.status)} · ${esc(l.detail)}</span></span></div>`;
+  return `<div class="leg">${tag}<span>${esc(l.name)}, <span class="det">${esc(l.status)} · ${esc(l.detail)}</span></span></div>`;
 }
 
 function card(p){
@@ -104,16 +104,16 @@ function card(p){
     <div class="card-head"><span class="id">${esc(p.plan_id)}</span>
       <span class="meta">${esc((p.intake.equipment||"").replace(/_/g," "))} · ${esc(p.intake.plan_id||p.intake.plan_name||"plan ?")}</span>
       <div class="spacer"></div><span class="badge ${bcls}">${btxt}</span></div>
-    ${p.escalated_to_human?`<p class="escalate">⚠ Escalated to human — ${esc(p.escalation_reason)}</p>`:""}
-    <section><p class="label">Coverage — steps needed (not a coverage decision)</p>
+    ${p.escalated_to_human?`<p class="escalate">⚠ Escalated to human, ${esc(p.escalation_reason)}</p>`:""}
+    <section><p class="label">Coverage, steps needed (not a coverage decision)</p>
       <div class="summary">${esc(p.coverage.headline)}</div>${p.coverage.requirements.map(reqRow).join("")}</section>
-    <section><p class="label">Vendor match — ${p.vendors.used_ai?"AI / Claude":"deterministic fallback"}</p>
+    <section><p class="label">Vendor match, ${p.vendors.used_ai?"AI / Claude":"deterministic fallback"}</p>
       <div class="summary">${esc(p.vendors.summary)}</div>
       ${p.vendors.shortlist.map(vendorRow).join("")}
-      ${p.vendors.excluded.map(x=>`<div class="excluded">✗ ${esc(x.name)} — <b>${esc(x.reason)}</b></div>`).join("")}</section>
+      ${p.vendors.excluded.map(x=>`<div class="excluded">✗ ${esc(x.name)}, <b>${esc(x.reason)}</b></div>`).join("")}</section>
     <section><p class="label">Coordination legs</p>
       ${auto.map(legRow).join("")}
-      <div class="boundary">trust boundary — approval required below</div>
+      <div class="boundary">trust boundary, approval required below</div>
       ${gated.map(legRow).join("")}</section>
     ${p.callback_script?`<div class="script"><p class="label">Callback sent to patient</p>${esc(p.callback_script)}</div>`:""}
     ${canAct?`<div class="actions">

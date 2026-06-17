@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "dme-voice-agent"
 version = "0.1.0"
-description = "Voice agent for Medicare DME coordination — a take-home learning artifact."
+description = "Voice agent for Medicare DME coordination, a take-home learning artifact."
 requires-python = ">=3.11"
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.15"]
 
-# This is a runnable app (modules run via `python -m ...`), not a packaged library —
+# This is a runnable app (modules run via `python -m ...`), not a packaged library,
 # so install nothing on `pip install -e .`; we only want the dev tools + tool config.
 [tool.setuptools]
 py-modules = []

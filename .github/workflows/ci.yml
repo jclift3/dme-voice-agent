@@ -23,7 +23,7 @@ jobs:
           python -m ruff format --check .
       - name: Tests
         run: python -m pytest
-      # Policy evals + a clean demo run — all on the no-key deterministic paths.
+      # Policy evals + a clean demo run, all on the no-key deterministic paths.
       - name: Evals + demo
         run: |
           python -m evals.run_evals

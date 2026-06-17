@@ -1,5 +1,5 @@
 {
-  "_comment": "Mocked DME supplier directory. Replaceable feed — the matching REASONING is what's under test, not this data. Fields chosen to force a real ranking judgment (network + stock + responsiveness + distance), not a lookup.",
+  "_comment": "Mocked DME supplier directory. Replaceable feed, the matching REASONING is what's under test, not this data. Fields chosen to force a real ranking judgment (network + stock + responsiveness + distance), not a lookup.",
   "patient_context_example": {
     "equipment": "standard_wheelchair",
     "hcpcs_example": "K0001",
@@ -52,7 +52,7 @@
       "avg_callback_hours": 12,
       "fulfillment_days_p50": 3,
       "complaints_last_90d": 0,
-      "notes": "TRAP: in stock + responsive, but NOT in-network for Humana MA PPO. Must be filtered out — tests that the agent respects the network constraint over surface signals."
+      "notes": "TRAP: in stock + responsive, but NOT in-network for Humana MA PPO. Must be filtered out, tests that the agent respects the network constraint over surface signals."
     },
     {
       "id": "sup_004",
@@ -90,7 +90,7 @@
     { "id": "sup_005", "why": "In-network + in stock + close + responsive. Solid #2." }
   ],
   "expected_excluded": [
-    { "id": "sup_002", "why": "In-network but backordered ~6 days — offer only if patient can wait." },
+    { "id": "sup_002", "why": "In-network but backordered ~6 days, offer only if patient can wait." },
     { "id": "sup_003", "why": "Excluded: not in-network for Humana MA PPO despite good signals." },
     { "id": "sup_004", "why": "Excluded/flagged: does not accept assignment + far + high complaints." }
   ]
