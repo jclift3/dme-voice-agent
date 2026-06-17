@@ -1,4 +1,4 @@
-# Sample call — live transcript
+# Sample call: live transcript
 
 A real call placed to the DME intake agent (+1 323 614 7503) during the build,
 captured from the Vapi API. This is the artifact for async reviewers who can't
@@ -15,7 +15,7 @@ place a live call.
 - **An honest UX finding:** the agent front-loaded several questions at once; the
   caller pushed back ("can you ask them one by one?") and the agent recovered
   ("You're absolutely right... let me slow down"). This became a Cekura metric
-  (`one_question_at_a_time`) and a prompt fix — see [cekura_results.md](cekura_results.md).
+  (`one_question_at_a_time`) and a prompt fix. See [cekura_results.md](cekura_results.md).
 - The structured result this produced is plan `plan_b2199151`: `plan_id` was left
   null (only the spoken plan *name* was captured), yet the async Claude match still
   inferred the Humana MA PPO network and excluded both trap suppliers correctly.

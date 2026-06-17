@@ -13,7 +13,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
-# Intake — what the voice agent captures on the call (REAL, via Vapi tools)
+# Intake, what the voice agent captures on the call (REAL, via Vapi tools)
 # ---------------------------------------------------------------------------
 
 
@@ -21,7 +21,7 @@ class IntakeRequest(BaseModel):
     """Structured request extracted from the inbound call.
 
     The agent fills this from natural conversation. `confidence` is the agent's
-    own read of how sure it is — below threshold we route to a human rather
+    own read of how sure it is, below threshold we route to a human rather
     than guess (see app/main.py).
     """
 
@@ -49,7 +49,7 @@ class IntakeRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Coverage requirements — DETERMINISTIC. Never a coverage *determination*.
+# Coverage requirements, DETERMINISTIC. Never a coverage *determination*.
 # ---------------------------------------------------------------------------
 
 
@@ -61,13 +61,13 @@ class CoverageRequirement(BaseModel):
 
 class CoverageChecklist(BaseModel):
     equipment: str
-    headline: str  # what's needed, phrased as steps — NOT "you are covered"
+    headline: str  # what's needed, phrased as steps, NOT "you are covered"
     requirements: list[CoverageRequirement]
     cms_reference: str | None = None
 
 
 # ---------------------------------------------------------------------------
-# Vendor matching — AI judgment (Claude) over a mocked supplier directory
+# Vendor matching, AI judgment (Claude) over a mocked supplier directory
 # ---------------------------------------------------------------------------
 
 
@@ -79,7 +79,7 @@ class RankedVendor(BaseModel):
     in_stock: bool
     distance_mi: float
     rationale: str = Field(
-        description="Why this vendor placed here — the reasoning a nurse would want to see"
+        description="Why this vendor placed here, the reasoning a nurse would want to see"
     )
 
 

@@ -1,13 +1,13 @@
-"""In-network vendor research/matching — the AI-judgment centerpiece.
+"""In-network vendor research/matching, the AI-judgment centerpiece.
 
 This is the exact task nurses say is painful: given a patient's plan, ZIP, and
 equipment, figure out which suppliers are actually in-network, in stock, and
-responsive — and rank them with a defensible rationale.
+responsive, and rank them with a defensible rationale.
 
 Two layers, on purpose:
   * AI (Claude, claude-opus-4-8): synthesizes messy supplier data into a ranked
     shortlist *with reasoning*. Latency doesn't matter here (it's async), so we
-    use a strong model at high effort — the opposite tradeoff from the live call.
+    use a strong model at high effort, the opposite tradeoff from the live call.
   * Deterministic fallback: if no API key is configured (or the call fails),
     a transparent scoring function produces the same shape. The demo always
     runs, and we can show the AI and the rules side by side.
@@ -46,7 +46,7 @@ def match_vendors(intake: IntakeRequest) -> VendorMatch:
 
 
 # ---------------------------------------------------------------------------
-# AI path — Claude with structured output
+# AI path, Claude with structured output
 # ---------------------------------------------------------------------------
 
 
@@ -92,7 +92,7 @@ def _match_with_claude(intake: IntakeRequest, suppliers: list[dict]) -> VendorMa
 
 
 # ---------------------------------------------------------------------------
-# Deterministic fallback — transparent scoring (also our oracle for tests)
+# Deterministic fallback, transparent scoring (also our oracle for tests)
 # ---------------------------------------------------------------------------
 
 
@@ -156,6 +156,6 @@ def _match_deterministic(intake: IntakeRequest, suppliers: list[dict]) -> Vendor
         f"{len(ranked)} in-network option(s) for {eq}; "
         f"{len(excluded)} excluded. Top pick: {ranked[0].name}."
         if ranked
-        else f"No in-network supplier found for {eq} — escalate to a nurse."
+        else f"No in-network supplier found for {eq}, escalate to a nurse."
     )
     return VendorMatch(shortlist=ranked, excluded=excluded, summary=summary, used_ai=False)

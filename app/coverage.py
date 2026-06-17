@@ -1,7 +1,7 @@
 """Deterministic Medicare DME coverage *requirements*.
 
 This module is intentionally NOT AI. It returns the checklist of what Medicare
-requires for a piece of equipment — the steps that must happen — and never a
+requires for a piece of equipment, the steps that must happen, and never a
 yes/no coverage decision. That line is the heart of the design: the agent can
 tell a patient "here's what's needed," but a coverage determination is a
 clinical/billing judgment that stays with the PCP and the nurse.
@@ -56,12 +56,12 @@ def coverage_requirements(intake: IntakeRequest) -> CoverageChecklist:
     spec = _RULES.get(intake.equipment, _RULES["_default"])
 
     # Resolve what we already know from intake. Unknown stays None (not False)
-    # so the nurse/PCP can fill the gap — we never assert a requirement is unmet.
+    # so the nurse/PCP can fill the gap, we never assert a requirement is unmet.
     known = {
         "face_to_face": intake.recent_visit,
         "written_order": intake.has_order,
         "in_network_supplier": None,  # decided by the vendor-matching leg
-        "home_mobility_need": None,  # clinical — PCP, not us
+        "home_mobility_need": None,  # clinical, PCP, not us
     }
 
     reqs = [

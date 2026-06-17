@@ -1,4 +1,4 @@
-"""Local end-to-end demo — no telephony required.
+"""Local end-to-end demo, no telephony required.
 
 This drives the same backend the Vapi webhook drives, but feeds it a scripted
 intake (what the voice agent would have captured). It proves the whole thread:
@@ -21,7 +21,7 @@ LINE = "=" * 72
 def show_plan(plan) -> None:
     print(f"\nPLAN {plan.plan_id}   gate={plan.gate.value}")
     print("-" * 72)
-    print("COVERAGE (deterministic — steps needed, NOT a coverage decision):")
+    print("COVERAGE (deterministic, steps needed, NOT a coverage decision):")
     print(f"  {plan.coverage.headline}")
     for r in plan.coverage.requirements:
         mark = {True: "[x]", False: "[ ]", None: "[?]"}[r.met]
@@ -33,14 +33,14 @@ def show_plan(plan) -> None:
     print(f"  {plan.vendors.summary}")
     for v in plan.vendors.shortlist:
         stock = "in stock" if v.in_stock else "backordered"
-        print(f"   #{v.rank} {v.name}  ({stock}) — {v.rationale}")
+        print(f"   #{v.rank} {v.name}  ({stock}), {v.rationale}")
     for x in plan.vendors.excluded:
-        print(f"   ✗  {x.name} — {x.reason}")
+        print(f"   ✗  {x.name}, {x.reason}")
 
     print("\nLEGS (gated = needs nurse approval before any external action):")
     for leg in plan.legs:
         gate = "GATED" if leg.gated else "auto "
-        print(f"   [{gate}] {leg.name}: {leg.status} — {leg.detail}")
+        print(f"   [{gate}] {leg.name}: {leg.status}, {leg.detail}")
 
     if plan.escalated_to_human:
         print(f"\n  ⚠ ESCALATED TO HUMAN: {plan.escalation_reason}")
@@ -48,7 +48,7 @@ def show_plan(plan) -> None:
 
 def scenario_happy_path() -> None:
     print(LINE)
-    print("SCENARIO 1 — wheelchair, recent PCP visit, no order, PCP office closed")
+    print("SCENARIO 1, wheelchair, recent PCP visit, no order, PCP office closed")
     print(LINE)
     intake = IntakeRequest(
         equipment="standard_wheelchair",
@@ -77,7 +77,7 @@ def scenario_happy_path() -> None:
 
 def scenario_no_in_network() -> None:
     print("\n" + LINE)
-    print("SCENARIO 2 — failure path: plan with no in-network supplier")
+    print("SCENARIO 2, failure path: plan with no in-network supplier")
     print(LINE)
     intake = IntakeRequest(
         equipment="standard_wheelchair",
@@ -93,7 +93,7 @@ def scenario_no_in_network() -> None:
 
 def scenario_low_confidence() -> None:
     print("\n" + LINE)
-    print("SCENARIO 3 — failure path: low-confidence extraction routes to human")
+    print("SCENARIO 3, failure path: low-confidence extraction routes to human")
     print(LINE)
     intake = IntakeRequest(
         equipment="standard_wheelchair",

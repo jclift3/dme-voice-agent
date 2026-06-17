@@ -1,10 +1,10 @@
 """FastAPI backend for the DME voice agent.
 
 Two surfaces:
-  1. /vapi/webhook  — Vapi calls this during and after the phone call.
+  1. /vapi/webhook , Vapi calls this during and after the phone call.
        * tool-calls: the agent captures the request / asks for coverage steps.
        * end-of-call-report: we kick off the async coordination + build a plan.
-  2. Nurse console — list plans, inspect the trust boundary, approve/reject.
+  2. Nurse console, list plans, inspect the trust boundary, approve/reject.
        Approval is what lets the gated legs (PCP nudge, patient callback) fire.
 
 Run: uvicorn app.main:app --reload  (then expose with a tunnel for Vapi).
@@ -31,7 +31,7 @@ _CONSOLE = Path(__file__).resolve().parent.parent / "static" / "console.html"
 
 @app.get("/")
 def console() -> FileResponse:
-    """The nurse console — the trust boundary, made clickable."""
+    """The nurse console, the trust boundary, made clickable."""
     return FileResponse(_CONSOLE)
 
 
@@ -61,7 +61,7 @@ async def vapi_webhook(payload: dict) -> JSONResponse:
     if mtype == "end-of-call-report":
         return JSONResponse(_handle_end_of_call(message))
 
-    # status-update, transcript, etc. — ack and ignore.
+    # status-update, transcript, etc., ack and ignore.
     return JSONResponse({"ok": True})
 
 
@@ -150,7 +150,7 @@ def reject(plan_id: str, reason: str = "") -> JSONResponse:
 
 
 # ---------------------------------------------------------------------------
-# Demo seeding — lets the console run a full inbound-call scenario in one click,
+# Demo seeding, lets the console run a full inbound-call scenario in one click,
 # so the live demo never depends on telephony. Mirrors sim/run_demo.py.
 # ---------------------------------------------------------------------------
 

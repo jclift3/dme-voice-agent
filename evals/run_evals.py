@@ -1,12 +1,12 @@
 """Evals for the DME coordination slice.
 
-These check the parts where judgment and safety live — not the plumbing. They
+These check the parts where judgment and safety live, not the plumbing. They
 assert *hard constraints* (not an exact ranking), so the SAME suite passes
 whether vendor matching ran on Claude or the deterministic fallback. That's the
 point: we're testing the policy, not a specific model's phrasing.
 
 What we're really guarding:
-  * The trust boundary holds — out-of-network and no-assignment suppliers never
+  * The trust boundary holds, out-of-network and no-assignment suppliers never
     make the shortlist, no matter how good their other signals look.
   * The agent escalates instead of guessing (no vendor found; low confidence).
   * Coverage requirements resolve from intake correctly and never assert a
@@ -28,7 +28,7 @@ from app.models import IntakeRequest
 IN_STOCK_IN_NETWORK = {"sup_001", "sup_005"}  # the only valid top picks
 OUT_OF_NETWORK = "sup_003"  # trap: responsive + in stock but wrong network
 NO_ASSIGNMENT = "sup_004"  # trap: in-network by id but doesn't accept assignment
-BACKORDERED = "sup_002"  # in-network but backordered — never #1
+BACKORDERED = "sup_002"  # in-network but backordered, never #1
 
 
 class Eval:
@@ -191,7 +191,7 @@ def main() -> int:
         if os.environ.get("ANTHROPIC_API_KEY")
         else "deterministic fallback"
     )
-    print(f"Running {len(EVALS)} evals — vendor matching via: {mode}\n")
+    print(f"Running {len(EVALS)} evals, vendor matching via: {mode}\n")
     failures = 0
     for fn in EVALS:
         e = fn()

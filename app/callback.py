@@ -4,7 +4,7 @@ Real path: trigger a Vapi outbound call (or SMS) using the approved script.
 Mock path (default): log the call so the demo runs without telephony.
 
 Set VAPI_API_KEY + VAPI_PHONE_NUMBER_ID to go live. Everything else stays the
-same — this is the one spot that talks to the outside world, so it's the one
+same, this is the one spot that talks to the outside world, so it's the one
 spot that's explicitly gated and mockable.
 """
 

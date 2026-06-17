@@ -1,6 +1,6 @@
 """In-memory store for coordination plans + the orchestration that builds them.
 
-No persistent DB on purpose (per the brief — mock freely). This is where the
+No persistent DB on purpose (per the brief, mock freely). This is where the
 async coordination work happens after the call ends: build coverage checklist
 (deterministic), match vendors (AI), assemble legs, and decide what's gated.
 """
@@ -18,7 +18,7 @@ from .models import (
 )
 from .vendor_match import match_vendors
 
-# Below this, extraction is too uncertain to act on — route to a human.
+# Below this, extraction is too uncertain to act on, route to a human.
 CONFIDENCE_THRESHOLD = 0.6
 
 _PLANS: dict[str, CoordinationPlan] = {}
@@ -45,13 +45,13 @@ def build_plan(intake: IntakeRequest) -> CoordinationPlan:
         PlanLeg(
             name="vendor_research",
             status="done",
-            gated=False,  # research is a read — safe to automate
+            gated=False,  # research is a read, safe to automate
             detail=vendors.summary,
         ),
         PlanLeg(
             name="pcp_order_nudge",
             status="drafted" if pcp_needed else "not_needed",
-            gated=True,  # sending anything to the PCP is a write — gate it
+            gated=True,  # sending anything to the PCP is a write, gate it
             detail=(
                 "Draft order-nudge queued for nurse to send to PCP "
                 f"({intake.pcp_name or 'PCP on file'})."
@@ -62,7 +62,7 @@ def build_plan(intake: IntakeRequest) -> CoordinationPlan:
         PlanLeg(
             name="patient_callback",
             status="pending_approval",
-            gated=True,  # a patient-facing commitment — gate it
+            gated=True,  # a patient-facing commitment, gate it
             detail="Callback with plan + timeline, sent only after nurse approves.",
         ),
     ]
@@ -79,13 +79,13 @@ def build_plan(intake: IntakeRequest) -> CoordinationPlan:
     if intake.confidence < CONFIDENCE_THRESHOLD:
         plan.escalated_to_human = True
         plan.escalation_reason = (
-            f"Low extraction confidence ({intake.confidence:.2f}) — nurse should "
+            f"Low extraction confidence ({intake.confidence:.2f}), nurse should "
             "review the captured request before anything proceeds."
         )
     elif not vendors.shortlist:
         plan.escalated_to_human = True
         plan.escalation_reason = (
-            "No in-network supplier found — nurse should research manually and "
+            "No in-network supplier found, nurse should research manually and "
             "set honest expectations with the patient."
         )
 
@@ -117,7 +117,7 @@ def reject_plan(plan_id: str, reason: str = "") -> CoordinationPlan | None:
 
 def _build_callback_script(plan: CoordinationPlan) -> str:
     """What the patient hears on the callback. Note what it never says:
-    it states what's needed and the next step — never 'you are covered'."""
+    it states what's needed and the next step, never 'you are covered'."""
     top = plan.vendors.shortlist[0] if plan.vendors.shortlist else None
     eq = plan.intake.equipment.replace("_", " ")
     if top is None:
@@ -133,8 +133,8 @@ def _build_callback_script(plan: CoordinationPlan) -> str:
     )
     return (
         f"Hi, this is your care team following up about your {eq}. We found "
-        f"{len(plan.vendors.shortlist)} in-network supplier(s) for your plan — the best "
+        f"{len(plan.vendors.shortlist)} in-network supplier(s) for your plan, the best "
         f"fit is {top.name}, which has it in stock.{pcp_line} "
         "We'll coordinate the next steps and keep you updated. Here's what's needed from "
-        "you: nothing right now — we'll reach out if we need anything."
+        "you: nothing right now, we'll reach out if we need anything."
     )
