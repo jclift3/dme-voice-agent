@@ -38,8 +38,8 @@ User: I'm not sure. It's the main 1 the main hospital there.
 AI: That's okay. We'll track that down. Me ask you this. Do you have your Medicare card handy? What's the name of your Medicare plan or the plan ID if you can see it?
 User: I have Humana Medicare Advantage.
 AI: Perfect. Humana Medicare Advantage. Thank you. And do you have a callback number where we can reach you?
-User: Yeah. 6 7 8 5 2 2 3 9 8 6.
-AI: Great. Thank you. Let me just confirm that number. 6 7 8 5 2 2 3 9 8 6. Is that right?
+User: Yeah. [phone number redacted].
+AI: Great. Thank you. Let me just confirm that number. [phone number redacted]. Is that right?
 User: That's the 1.
 AI: Perfect. So just to recap, uh, you need a wheelchair. You saw your doctor last week. You have Humana Medicare Advantage, and we'll try track down your PCP's name from the main hospital. In your area. We have your callback number Let me let me save all of this down for our team. This will just take a sec.
 
