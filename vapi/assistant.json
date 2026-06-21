@@ -1,7 +1,7 @@
 {
-  "_comment": "Paste/adapt into the Vapi dashboard (or POST to /assistant). The system prompt lives in vapi/system_prompt.md. Set server.url to your tunnel + /vapi/webhook. Fast model in-conversation (latency = UX); the strong model runs async in the backend for vendor matching.",
-  "name": "DME Intake Coordinator",
-  "firstMessage": "Hi, thanks for calling. I can help you get medical equipment set up. What do you need today?",
+  "_comment": "Outbound supplier-outreach assistant. Paste/adapt into the Vapi dashboard (or POST to /assistant). The system prompt lives in vapi/system_prompt.md. Set server.url to your tunnel + /vapi/webhook. Fast model in-conversation (latency = UX). For the patient status call, swap in vapi/patient_update_prompt.md.",
+  "name": "DME Supplier Outreach",
+  "firstMessage": "Hi, this is a care-advocate assistant calling about setting up a wheelchair for a Medicare patient. Do you have a quick minute?",
   "model": {
     "provider": "anthropic",
     "model": "claude-haiku-4-5-20251001",
@@ -13,38 +13,20 @@
       {
         "type": "function",
         "function": {
-          "name": "capture_request",
-          "description": "Record what we've learned about the patient's DME request. Call this as you gather details; you can call it multiple times to add more.",
+          "name": "record_supplier_outcome",
+          "description": "Record what you learned by calling this supplier. Call once before ending the call (even for voicemail or no answer).",
           "parameters": {
             "type": "object",
             "properties": {
-              "equipment": { "type": "string", "description": "standard_wheelchair | cpap | walker | hospital_bed | oxygen_concentrator" },
-              "plan_id": { "type": "string", "description": "Medicare plan id if known" },
-              "plan_name": { "type": "string", "description": "Plan name as spoken" },
-              "zip": { "type": "string" },
-              "pcp_name": { "type": "string" },
-              "recent_visit": { "type": "boolean", "description": "Had a recent face-to-face PCP visit?" },
-              "has_order": { "type": "boolean", "description": "Does a written order already exist?" },
-              "urgency": { "type": "string", "description": "routine | soon | urgent" },
-              "patient_callback_number": { "type": "string" },
-              "confidence": { "type": "number", "description": "0-1, your confidence in this capture; lower it if unsure" },
+              "supplier_name": { "type": "string" },
+              "reached": { "type": "string", "description": "answered | voicemail | no_answer" },
+              "taking_new_medicare_patients": { "type": "boolean" },
+              "stocks_k0001": { "type": "boolean" },
+              "accepts_assignment": { "type": "boolean" },
+              "delivery_eta_days": { "type": "integer" },
               "notes": { "type": "string" }
             },
-            "required": ["equipment"]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "coverage_requirements",
-          "description": "Get the list of steps Medicare requires for a piece of equipment. Returns WHAT IS NEEDED, never a coverage yes/no. Use when the patient asks whether something is covered.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "equipment": { "type": "string" }
-            },
-            "required": ["equipment"]
+            "required": ["supplier_name", "reached"]
           }
         }
       },

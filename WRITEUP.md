@@ -1,71 +1,85 @@
-# DME Voice Agent: Writeup
+# DME Back-End Coordination: Writeup
 
-I built and deployed this on a real phone number. A live call captured the request, the
-async vendor match ran on Claude, and a coordination plan landed at the nurse gate. The
-transcript and recording are in [docs/sample_call.md](docs/sample_call.md).
+Intake is done. This builds the coordination engine that takes the documented Eleanor
+case and works it across the four surfaces (supplier outreach, PCP order, coverage,
+patient update), with a care advocate approving anything that commits. It runs with no
+keys and no phone: `python -m sim.run_demo`.
 
-## 1. The slice
+## Sequencing
 
-The agent owns coordination, not clinical or coverage judgment. Reads are automated,
-liability-bearing writes are gated behind a nurse and reversible, and it tells the
-patient "here's what's needed," never "you're covered."
+I started from the documented case and built the surfaces in the order the time
+actually goes.
 
-I took the front door and the orchestration handoff. The voice agent answers the inbound
-call, captures a structured request, and decides what proceeds on its own versus what
-gets gated. I built one async leg for real, the in-network vendor research and matching,
-because that is the task nurses say is most painful. Then it closes the loop with a
-callback.
+**Supplier outreach first, and deepest.** The directory is sparse on purpose (name,
+phone, address). Everything that decides whether a supplier can serve Eleanor is
+discovered by calling: are they taking new Medicare patients, do they stock K0001, do
+they accept assignment, how soon can they deliver, and did they even pick up. So I
+built the engine that works the list, records what each call returns, and handles the
+failure modes the brief names: no answer and voicemail go to a callback queue,
+said-yes-then-silent gets flagged for re-contact, not-taking-patients is excluded,
+out-of-stock is wait-only, and does-not-accept-assignment is flagged because it costs
+her more. The ranking is built from what was learned, not from pre-known attributes.
 
-I did not build the live PCP/EHR order write, the insurance coding loop, or a real
-supplier feed. Those are plumbing or high-liability work with low signal for a short
-exercise. The decisions worth probing (what to capture, when to nudge the PCP, who
-decides coverage) all sit inside the slice I chose.
+**Then the orchestrator across all four surfaces.** Coverage is a deterministic check
+for K0001 under Part B (what is needed, plus the roughly 20% she will owe, since she
+has no supplemental plan). The PCP order surface models the real decision, which is
+when to nudge: a verbal order is in the chart but the written order is not submitted,
+so the system requests it and schedules a follow-up. The patient update closes the loop.
 
-## 2. The implementation
+**The sequencing principle is the trust boundary.** Discovery runs free because calling
+to learn is reversible. Anything that commits on Eleanor's behalf, sending the order
+request or calling her, waits for a care advocate. And the system refuses to declare
+victory on the supplier when the real blocker is elsewhere: the unsigned written order
+is critical path, so it surfaces that as the next action, not "found a supplier, done."
 
-AI does the judgment work: the live intake conversation, and the vendor research and
-ranking with a written rationale a nurse can check. Deterministic code does the rules:
-the Medicare coverage-requirements checklist and the gating logic, so the agent surfaces
-what is needed and never improvises eligibility. A human owns the liability: a nurse
-approves every write that reaches the patient or the PCP.
+## Technology and architecture
 
-Real: the inbound voice call (Vapi), the extraction, the vendor matching, the callback,
-and the approval gate. Mocked: the supplier directory, the PCP office, and the insurance
-APIs. The model split is deliberate. A fast model runs the live conversation because
-latency is the user experience on a phone call, and a stronger model runs the async
-research because there quality matters and latency does not.
+- **Python and FastAPI**, with Pydantic models as the contracts between surfaces. In
+  memory, no DB, per the brief.
+- **Voice via Vapi, outbound.** A supplier-outreach agent calls suppliers and records
+  outcomes through a tool; a patient-update agent delivers the approved status. With
+  more time I would move the voice layer to LiveKit for the control it gives over audio
+  and turn-taking; Vapi is quick for a demo and the backend is decoupled from it, so the
+  swap is contained.
+- **AI where judgment lives.** Claude (opus, async) synthesizes the discovered call
+  outcomes into a ranked plan with reasons. A deterministic fallback applies the same
+  policy, so the demo always runs without a key and the evals have a stable oracle. A
+  fast model runs the live calls, where latency is the experience.
+- **Deterministic where rules live.** The coverage checklist and the gating and
+  escalation logic. The system surfaces what is needed and what she owes, never a
+  coverage verdict.
+- **The sparse directory is a CSV** (name, phone, address). What matters is discovered
+  by calling, mocked in `data/` for the demo, or placed by the voice agent and graded by
+  Cekura supplier personas in production.
+- **Tested and linted.** pytest (unit and functional), ruff, three eval layers, and a CI
+  gate (`make gate`).
 
-One thing I would change with more time: I would move the voice layer to LiveKit for the
-control it gives over audio, turn-taking, and tool orchestration. I used Vapi here
-because it gets a real, good-sounding call running fast, which is what a short demo
-needs. The backend is decoupled from the voice platform, so that swap is contained.
+## The cut list
 
-## 3. The tradeoffs
+- **Live insurance authorization (270/271):** mocked. K0001 needs no prior auth, and
+  eligibility is a structured API call, not where the coordination judgment is.
+- **Live PCP or EHR write:** mocked. The interesting decision is when to nudge, which I
+  model; the fax or portal itself is plumbing.
+- **Real calls to real suppliers:** the call outcomes are mocked in `data/`. The voice
+  agent and Cekura supplier personas are wired for it, but cold-calling real businesses
+  is not appropriate for a take-home.
+- **Persistence, auth, a multi-case queue:** skipped per the brief. One case, in memory.
+- **Patient intake:** out of scope per the updated brief.
 
-The eval work was the most interesting part, and on a system with this many moving parts
-it is what keeps the agent honest. I guard the trust boundary at three levels: backend
-policy tests, live-conversation guardrail tests, and persona-driven voice simulation
-against the deployed agent using Cekura. A real Cekura run held the "never claims
-coverage" metric under a caller who pushed hard for a yes-or-no answer, and it caught two
-real bugs: a call that would not end and a habit of stacking questions. I fixed both. See
-[docs/cekura_results.md](docs/cekura_results.md).
+## What's next
 
-Where data would change my decisions: real vendor responsiveness data turns the
-hand-tuned ranking into a learned one, logs of extraction confidence versus nurse
-corrections set the auto-versus-human threshold from evidence rather than a guess, and
-callback-outcome rates show whether better expectation-setting actually cuts how much a
-patient has to chase people.
+**With one more day:** make discovery real. Wire the outbound supplier calls to the live
+Vapi agent and the webhook so the outcomes come from actual calls, not the mock, and run
+the Cekura supplier-persona suite against it. Add the re-call and re-contact scheduler so
+follow-ups fire on a timer, which is what actually catches the said-yes-then-silent
+supplier.
 
-What would worry me about shipping to real patients: tone that implies coverage
-certainty, since speech is harder to control than text. Silent async failure, where a
-plan stalls and no callback fires, which is invisible and needs an SLA timer with
-alerting. Accessibility for non-English and hard-of-hearing callers, which I did not
-handle. And PHI on the call, which needs BAA-covered vendors and a retention policy.
+**With two weeks:** in priority order. First, an SLA timer with alerting on stalled
+orders and silent suppliers, because that invisible failure mode is the one that quietly
+loses a week. Then persistence and a real case queue so one advocate can carry many
+cases. Then the real PCP order leg via fax or EHR behind the existing gate. Then a
+learned supplier-ranking model once call-outcome history exists.
 
-## Demo run-of-show
-
-Call the number, ask for a wheelchair, and ask "am I covered?" to see it return the steps
-rather than a verdict. Hang up, and the backend builds the plan with the vendor match.
-In the console, the two trap suppliers are excluded with reasons, which shows it is
-matching and not a lookup. Approve, and the gated legs fire and the callback goes out. To
-run the whole thread with no phone and no keys: `python -m sim.run_demo`.
+The order is deliberate: make discovery real, then make the failure-catching real, then
+scale, then optimize. Catching stalls early is the care advocate's actual skill, so that
+is what I would automate before anything fancy.

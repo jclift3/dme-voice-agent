@@ -1,76 +1,57 @@
-"""Deterministic Medicare DME coverage *requirements*.
+"""Deterministic Medicare coverage rules for a standard manual wheelchair (K0001).
 
-This module is intentionally NOT AI. It returns the checklist of what Medicare
-requires for a piece of equipment, the steps that must happen, and never a
-yes/no coverage decision. That line is the heart of the design: the agent can
-tell a patient "here's what's needed," but a coverage determination is a
-clinical/billing judgment that stays with the PCP and the nurse.
-
-Rules are a small hand-authored table. In production this is where a rules
-engine (or a CMS policy feed) would live; the point is that it's deterministic
-and auditable, not improvised by a model.
+Not AI. It returns the checklist of what Medicare Part B requires and a plain-language
+estimate of what the patient will owe. It never returns a coverage verdict: whether a
+claim is actually paid depends on the signed order, supplier enrollment, and billing
+codes lining up, which is a care advocate and provider judgment, not the system's.
 """
 
 from __future__ import annotations
 
-from .models import CoverageChecklist, CoverageRequirement, IntakeRequest
+from .models import Case, CoverageCheck, CoverageRequirement
 
 CMS_WHEELCHAIR = "https://www.medicare.gov/coverage/wheelchairs-scooters"
 
-# Equipment -> the requirement template. `met` is resolved from intake below.
-_RULES: dict[str, dict] = {
-    "standard_wheelchair": {
-        "headline": "A standard wheelchair is covered under Part B as DME when these are in place:",
-        "cms_reference": CMS_WHEELCHAIR,
-        "requirements": [
-            (
-                "face_to_face",
-                "Recent face-to-face exam with the treating provider "
-                "documenting the mobility need.",
-            ),
-            ("written_order", "A written order (prescription) from the PCP sent to the supplier."),
-            (
-                "in_network_supplier",
-                "A Medicare-enrolled supplier that accepts assignment (lowest out-of-pocket).",
-            ),
-            (
-                "home_mobility_need",
-                "The need is for mobility within the home that a cane or walker can't resolve.",
-            ),
-        ],
-    },
-    # Other equipment reuses a generic template; extend as needed.
-    "_default": {
-        "headline": "This equipment is covered under Part B as DME when these are in place:",
-        "cms_reference": None,
-        "requirements": [
-            ("face_to_face", "Recent face-to-face exam documenting medical necessity."),
-            ("written_order", "A written order from the PCP sent to the supplier."),
-            ("in_network_supplier", "A Medicare-enrolled supplier that accepts assignment."),
-        ],
-    },
-}
 
-
-def coverage_requirements(intake: IntakeRequest) -> CoverageChecklist:
-    spec = _RULES.get(intake.equipment, _RULES["_default"])
-
-    # Resolve what we already know from intake. Unknown stays None (not False)
-    # so the nurse/PCP can fill the gap, we never assert a requirement is unmet.
-    known = {
-        "face_to_face": intake.recent_visit,
-        "written_order": intake.has_order,
-        "in_network_supplier": None,  # decided by the vendor-matching leg
-        "home_mobility_need": None,  # clinical, PCP, not us
-    }
-
+def coverage_check(case: Case) -> CoverageCheck:
     reqs = [
-        CoverageRequirement(label=label, detail=detail, met=known.get(label))
-        for (label, detail) in spec["requirements"]
+        CoverageRequirement(
+            label="face_to_face",
+            met=case.pcp_visit_done,
+            detail="A face-to-face exam with the treating provider documenting the mobility need.",
+        ),
+        CoverageRequirement(
+            label="written_order",
+            met=case.written_order_submitted,
+            detail="A written order signed by the PCP and on file with the supplier (a verbal "
+            "order in the chart is not enough).",
+        ),
+        CoverageRequirement(
+            label="enrolled_supplier",
+            met=None,  # resolved by supplier outreach, not knowable from the case alone
+            detail="A Medicare-enrolled supplier that accepts assignment, so the patient "
+            "owes the least.",
+        ),
+        CoverageRequirement(
+            label="medical_necessity",
+            met=None,  # the PCP's clinical call; a verbal order is noted but not formalized
+            detail="The chair is medically necessary for mobility within the home "
+            "(the provider's call).",
+        ),
     ]
-    return CoverageChecklist(
-        equipment=intake.equipment,
-        headline=spec["headline"],
+    return CoverageCheck(
+        equipment=case.equipment,
+        hcpcs=case.hcpcs,
+        headline="A standard manual wheelchair (K0001) is covered under Medicare Part B as DME "
+        "when these are in place:",
         requirements=reqs,
-        cms_reference=spec["cms_reference"],
+        # K0001 (standard manual wheelchair) is not on Medicare's prior-authorization list;
+        # that requirement applies to certain power mobility devices, not this chair.
+        prior_auth_required=False,
+        estimated_patient_responsibility=(
+            "After the Part B deductible, about 20% coinsurance of the Medicare-approved "
+            f"amount. {case.patient_name.split()[0]} has no supplemental plan, so she pays "
+            "that share herself."
+        ),
+        cms_reference=CMS_WHEELCHAIR,
     )

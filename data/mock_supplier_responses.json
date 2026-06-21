@@ -1,0 +1,51 @@
+{
+  "_comment": "MOCKED external system. The directory CSV gives only name/phone/address; everything here is what we would ONLY learn by actually calling the supplier. Keyed by supplier name. `reached` models telephony reality (answer / voicemail / no_answer). The other fields are null until reached. `scenario` tags the failure mode this supplier exercises. Swap this for real call outcomes (or Cekura-simulated supplier personas) in production.",
+  "responses": {
+    "Lakeshore Medical Supply": {
+      "reached": "answered", "taking_new_medicare_patients": true, "stocks_k0001": true,
+      "accepts_assignment": true, "delivery_eta_days": 3, "approx_miles": 1.4,
+      "scenario": "strong_candidate", "note": "Yes to all, can deliver in 3 days."
+    },
+    "Windy City Home Medical": {
+      "reached": "answered", "taking_new_medicare_patients": true, "stocks_k0001": true,
+      "accepts_assignment": true, "delivery_eta_days": 7, "approx_miles": 2.1,
+      "scenario": "candidate_slower", "note": "Yes, but next delivery window is a week out."
+    },
+    "North Side Mobility": {
+      "reached": "no_answer", "taking_new_medicare_patients": null, "stocks_k0001": null,
+      "accepts_assignment": null, "delivery_eta_days": null, "approx_miles": 3.8,
+      "scenario": "no_answer", "note": "Rang out, no voicemail. Needs a callback."
+    },
+    "Prairie DME Solutions": {
+      "reached": "answered", "taking_new_medicare_patients": false, "stocks_k0001": true,
+      "accepts_assignment": true, "delivery_eta_days": 4, "approx_miles": 2.6,
+      "scenario": "not_taking_patients", "note": "Not accepting new Medicare patients right now."
+    },
+    "Loop Medical Equipment": {
+      "reached": "answered", "taking_new_medicare_patients": true, "stocks_k0001": false,
+      "accepts_assignment": true, "delivery_eta_days": 14, "approx_miles": 2.9,
+      "scenario": "out_of_stock", "note": "K0001 backordered ~2 weeks. Wait-only option."
+    },
+    "Southwest Care Supply": {
+      "reached": "voicemail", "taking_new_medicare_patients": null, "stocks_k0001": null,
+      "accepts_assignment": null, "delivery_eta_days": null, "approx_miles": 7.2,
+      "scenario": "voicemail", "note": "Left a voicemail. Awaiting callback."
+    },
+    "Great Lakes Mobility": {
+      "reached": "answered", "taking_new_medicare_patients": true, "stocks_k0001": true,
+      "accepts_assignment": true, "delivery_eta_days": 5, "approx_miles": 1.9,
+      "awaiting_confirmation": true,
+      "scenario": "yes_then_silent", "note": "Said yes on the call, then never sent confirmation. Classic stall."
+    },
+    "Cicero Medical Supply": {
+      "reached": "answered", "taking_new_medicare_patients": true, "stocks_k0001": true,
+      "accepts_assignment": false, "delivery_eta_days": 4, "approx_miles": 8.6,
+      "scenario": "no_assignment", "note": "Yes, but does not accept assignment, so Eleanor would pay more."
+    },
+    "Evanston Home Health": {
+      "reached": "answered", "taking_new_medicare_patients": true, "stocks_k0001": true,
+      "accepts_assignment": true, "delivery_eta_days": 5, "approx_miles": 11.8,
+      "scenario": "candidate_far", "note": "Yes to all, but it is a longer haul out to Evanston."
+    }
+  }
+}

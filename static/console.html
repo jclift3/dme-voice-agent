@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>DME coordination: nurse console</title>
+<title>DME coordination: care-advocate console</title>
 <style>
   :root {
     --bg:#f7f6f3; --card:#fff; --ink:#1f2328; --muted:#6b7280; --line:#e5e7eb;
@@ -23,101 +23,107 @@
   button:hover { background:var(--gray-bg); }
   button.primary { background:var(--green); color:#fff; border-color:var(--green); }
   button.danger { color:var(--red); border-color:#f1c4c0; }
-  .seed button { font-size:13px; padding:5px 10px; }
-  main { padding:20px 24px; display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(420px,1fr)); }
+  main { padding:20px 24px; display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(480px,1fr)); }
   .empty { color:var(--muted); padding:40px; text-align:center; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
-  .card-head { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; }
+  .card-head { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .card-head .id { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; color:var(--muted); }
   .badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:999px; }
   .b-pending { background:var(--amber-bg); color:var(--amber); }
   .b-approved { background:var(--green-bg); color:var(--green); }
   .b-rejected { background:var(--red-bg); color:var(--red); }
-  .escalate { margin:0; padding:10px 16px; background:var(--red-bg); color:var(--red); font-size:13px;
-    border-bottom:1px solid var(--line); }
   section { padding:12px 16px; border-bottom:1px solid var(--line); }
   section:last-child { border-bottom:0; }
   .label { font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:0 0 8px; }
-  .req { display:flex; gap:8px; font-size:14px; margin:3px 0; }
-  .req .m { width:18px; flex:none; }
+  .row { display:flex; gap:8px; font-size:14px; margin:4px 0; align-items:baseline; }
   .met { color:var(--green); } .unmet { color:var(--amber); } .unknown { color:var(--muted); }
-  .vendor { display:flex; gap:8px; align-items:baseline; font-size:14px; margin:4px 0; }
-  .vendor .rank { font-weight:600; color:var(--green); flex:none; }
-  .vendor .why { color:var(--muted); font-size:13px; }
-  .stock { font-size:11px; font-weight:600; padding:1px 7px; border-radius:999px; background:var(--green-bg); color:var(--green); }
-  .stock.back { background:var(--amber-bg); color:var(--amber); }
-  .excluded { color:var(--muted); font-size:13px; margin:3px 0; }
-  .excluded b { color:var(--red); font-weight:500; }
+  .why { color:var(--muted); font-size:13px; }
+  .pill { font-size:10px; font-weight:600; padding:1px 7px; border-radius:999px; flex:none; }
+  .p-cand { background:var(--green-bg); color:var(--green); }
+  .p-follow { background:var(--amber-bg); color:var(--amber); }
+  .p-other { background:var(--gray-bg); color:var(--muted); }
   .summary { font-size:13px; color:var(--muted); margin:0 0 8px; }
+  .next { padding:12px 16px; background:var(--green-bg); font-size:14px; }
+  .next .label { color:var(--green); }
+  .escalate { padding:10px 16px; background:var(--red-bg); color:var(--red); font-size:13px; }
+  .escalate div { margin:3px 0; }
   .boundary { display:flex; align-items:center; gap:10px; margin:12px 0 8px; color:var(--amber); font-size:12px; font-weight:600; }
   .boundary::before,.boundary::after { content:""; height:1px; flex:1; background:repeating-linear-gradient(90deg,var(--amber) 0 4px,transparent 4px 8px); opacity:.5; }
-  .leg { display:flex; gap:8px; align-items:baseline; font-size:14px; margin:4px 0; }
   .tag { font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px; flex:none; }
   .tag.auto { background:var(--green-bg); color:var(--green); }
   .tag.gated { background:var(--amber-bg); color:var(--amber); }
-  .leg .det { color:var(--muted); font-size:13px; }
+  .det { color:var(--muted); font-size:13px; }
   .actions { padding:12px 16px; display:flex; gap:8px; }
   .script { padding:12px 16px; background:var(--green-bg); font-size:13px; }
-  .script .label { color:var(--green); }
   .meta { font-size:13px; color:var(--muted); }
 </style>
 </head>
 <body>
 <header>
   <div>
-    <h1>DME coordination: nurse console</h1>
-    <div class="sub">Reads are automated. Everything below the trust boundary needs your approval.</div>
+    <h1>DME coordination: care-advocate console</h1>
+    <div class="sub">Calling to discover is automatic. Everything below the trust boundary needs approval.</div>
   </div>
   <div class="spacer"></div>
-  <div class="seed">
-    <span class="sub">Simulate inbound call:</span>
-    <button onclick="seed('happy')">wheelchair (clean)</button>
-    <button onclick="seed('no_vendor')">no in-network</button>
-    <button onclick="seed('low_conf')">low confidence</button>
-  </div>
+  <button class="primary" onclick="build()">Build Eleanor's case</button>
 </header>
-<main id="plans"><div class="empty">No plans yet. Simulate an inbound call above, or send one through the Vapi webhook.</div></main>
+<main id="plans"><div class="empty">No cases yet. Click "Build Eleanor's case" to work it across the four surfaces.</div></main>
 
 <script>
-const fmtGate = g => ({pending_nurse_approval:["b-pending","pending approval"],approved:["b-approved","approved"],rejected:["b-rejected","rejected"]}[g]||["b-pending",g]);
 const esc = s => (s||"").replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const gateFmt = g => ({pending_advocate_approval:["b-pending","pending approval"],approved:["b-approved","approved"],rejected:["b-rejected","rejected"]}[g]||["b-pending",g]);
 
 function reqRow(r){
   const cls = r.met===true?"met":r.met===false?"unmet":"unknown";
   const m = r.met===true?"✓":r.met===false?"○":"–";
-  return `<div class="req"><span class="m ${cls}">${m}</span><span>${esc(r.detail)}</span></div>`;
+  return `<div class="row"><span class="${cls}">${m}</span><span>${esc(r.detail)}</span></div>`;
 }
-function vendorRow(v){
-  const stock = v.in_stock?`<span class="stock">in stock</span>`:`<span class="stock back">backordered</span>`;
-  return `<div class="vendor"><span class="rank">#${v.rank}</span><span>${esc(v.name)} ${stock}<div class="why">${esc(v.rationale)}</div></span></div>`;
+function supplierRow(a, pill, cls){
+  const eta = a.delivery_eta_days!=null?`${a.delivery_eta_days}d`:"";
+  const mi = a.approx_miles!=null?` · ${a.approx_miles}mi`:"";
+  return `<div class="row"><span class="pill ${cls}">${pill}</span><span>${esc(a.name)} <span class="why">${eta}${mi}</span><div class="why">${esc(a.reason)}</div></span></div>`;
 }
-function legRow(l){
-  const tag = l.gated?`<span class="tag gated">GATED</span>`:`<span class="tag auto">AUTO</span>`;
-  return `<div class="leg">${tag}<span>${esc(l.name)}, <span class="det">${esc(l.status)} · ${esc(l.detail)}</span></span></div>`;
+function surfaceRow(s){
+  const tag = s.gated?`<span class="tag gated">GATED</span>`:`<span class="tag auto">AUTO</span>`;
+  return `<div class="row">${tag}<span>${esc(s.name)} <span class="det">${esc(s.status)} · ${esc(s.detail)}</span></span></div>`;
 }
 
 function card(p){
-  const [bcls,btxt] = fmtGate(p.gate);
-  const auto = p.legs.filter(l=>!l.gated), gated = p.legs.filter(l=>l.gated);
-  const canAct = p.gate==="pending_nurse_approval";
+  const [bcls,btxt] = gateFmt(p.gate);
+  const c = p.case, cov = p.coverage, su = p.suppliers;
+  const auto = p.surfaces.filter(s=>!s.gated), gated = p.surfaces.filter(s=>s.gated);
+  const canAct = p.gate==="pending_advocate_approval";
   return `<div class="card">
     <div class="card-head"><span class="id">${esc(p.plan_id)}</span>
-      <span class="meta">${esc((p.intake.equipment||"").replace(/_/g," "))} · ${esc(p.intake.plan_id||p.intake.plan_name||"plan ?")}</span>
+      <span class="meta">${esc(c.patient_name)}, ${c.age} · ${esc(c.medicare_type)} · ${esc(c.equipment.replace(/_/g," "))} (${esc(c.hcpcs)})</span>
       <div class="spacer"></div><span class="badge ${bcls}">${btxt}</span></div>
-    ${p.escalated_to_human?`<p class="escalate">⚠ Escalated to human, ${esc(p.escalation_reason)}</p>`:""}
-    <section><p class="label">Coverage, steps needed (not a coverage decision)</p>
-      <div class="summary">${esc(p.coverage.headline)}</div>${p.coverage.requirements.map(reqRow).join("")}</section>
-    <section><p class="label">Vendor match, ${p.vendors.used_ai?"AI / Claude":"deterministic fallback"}</p>
-      <div class="summary">${esc(p.vendors.summary)}</div>
-      ${p.vendors.shortlist.map(vendorRow).join("")}
-      ${p.vendors.excluded.map(x=>`<div class="excluded">✗ ${esc(x.name)}, <b>${esc(x.reason)}</b></div>`).join("")}</section>
-    <section><p class="label">Coordination legs</p>
-      ${auto.map(legRow).join("")}
-      <div class="boundary">trust boundary, approval required below</div>
-      ${gated.map(legRow).join("")}</section>
-    ${p.callback_script?`<div class="script"><p class="label">Callback sent to patient</p>${esc(p.callback_script)}</div>`:""}
+
+    <div class="next"><p class="label">Next action</p>${esc(p.next_action)}</div>
+
+    ${p.escalations.length?`<div class="escalate"><p class="label">Blockers</p>${p.escalations.map(e=>`<div>! ${esc(e)}</div>`).join("")}</div>`:""}
+
+    <section><p class="label">Coverage · steps needed and cost (not a coverage decision)</p>
+      <div class="summary">${esc(cov.headline)}</div>
+      ${cov.requirements.map(reqRow).join("")}
+      <div class="row"><span class="det">Prior authorization: ${cov.prior_auth_required?"required":"not required"}. ${esc(cov.estimated_patient_responsibility)}</span></div>
+    </section>
+
+    <section><p class="label">Supplier outreach · ${su.used_ai?"AI / Claude":"deterministic"}</p>
+      <div class="summary">${esc(su.summary)}</div>
+      ${su.shortlist.map(a=>supplierRow(a,"READY","p-cand")).join("")}
+      ${su.followups.map(a=>supplierRow(a,"CALL BACK","p-follow")).join("")}
+      ${su.other.map(a=>supplierRow(a,a.status.replace(/_/g," "),"p-other")).join("")}
+    </section>
+
+    <section><p class="label">Coordination surfaces</p>
+      ${auto.map(surfaceRow).join("")}
+      <div class="boundary">trust boundary · approval required below</div>
+      ${gated.map(surfaceRow).join("")}
+    </section>
+
+    ${p.patient_update_script?`<div class="script"><p class="label">Patient update (sent)</p>${esc(p.patient_update_script)}</div>`:""}
     ${canAct?`<div class="actions">
-      <button class="primary" onclick="act('${p.plan_id}','approve')">Approve &amp; send callback</button>
+      <button class="primary" onclick="act('${p.plan_id}','approve')">Approve gated surfaces</button>
       <button class="danger" onclick="act('${p.plan_id}','reject')">Reject</button></div>`:""}
   </div>`;
 }
@@ -125,11 +131,10 @@ function card(p){
 async function refresh(){
   const plans = await (await fetch("/plans")).json();
   const el = document.getElementById("plans");
-  el.innerHTML = plans.length ? plans.map(card).join("") :
-    `<div class="empty">No plans yet. Simulate an inbound call above.</div>`;
+  el.innerHTML = plans.length ? plans.map(card).join("") : `<div class="empty">No cases yet. Click "Build Eleanor's case" above.</div>`;
 }
+async function build(){ await fetch("/case/build",{method:"POST"}); refresh(); }
 async function act(id,what){ await fetch(`/plans/${id}/${what}`,{method:"POST"}); refresh(); }
-async function seed(s){ await fetch(`/demo/seed?scenario=${s}`,{method:"POST"}); refresh(); }
 
 refresh();
 setInterval(refresh, 3000);

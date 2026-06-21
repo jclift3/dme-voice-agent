@@ -1,0 +1,174 @@
+"""Coordination orchestrator: works a case across the four surfaces and decides
+the next action.
+
+This is where the brief's four coordination surfaces come together: supplier
+outreach, PCP order, coverage, and the patient update. It assembles a plan, marks
+which surfaces commit liability (and so are gated behind a care advocate), surfaces
+the blockers and failure modes, and says what to do next. Reads (calling to discover,
+checking coverage rules) run on their own; commits (sending the order request,
+calling the patient) wait for approval.
+
+No persistent DB on purpose (per the brief). Plans live in memory.
+"""
+
+from __future__ import annotations
+
+import uuid
+
+from .coverage import coverage_check
+from .models import (
+    Case,
+    CoordinationPlan,
+    GateStatus,
+    OrderStatus,
+    PcpOrder,
+    SupplierStatus,
+    Surface,
+)
+from .supplier_outreach import work_suppliers
+
+_PLANS: dict[str, CoordinationPlan] = {}
+
+
+def all_plans() -> list[CoordinationPlan]:
+    return list(_PLANS.values())
+
+
+def get_plan(plan_id: str) -> CoordinationPlan | None:
+    return _PLANS.get(plan_id)
+
+
+def _assess_order(case: Case) -> PcpOrder:
+    """The interesting decision is when to nudge, not how the fax is sent."""
+    if case.written_order_submitted:
+        return PcpOrder(status=OrderStatus.SIGNED, attempts=1, detail="Written order is on file.")
+    detail = (
+        f"Verbal order is in {case.patient_name.split()[0]}'s chart, but the written order "
+        f"is not submitted. Request it from {case.pcp_name}'s office ({case.pcp_practice}) "
+        "and nudge again if it is not signed."
+    )
+    return PcpOrder(status=OrderStatus.REQUESTED, attempts=1, detail=detail, nudge_after_days=2)
+
+
+def build_plan(case: Case) -> CoordinationPlan:
+    """Work all four surfaces and assemble a plan with a clear next action."""
+    plan_id = f"case_{uuid.uuid4().hex[:8]}"
+    coverage = coverage_check(case)
+    suppliers = work_suppliers(case)
+    order = _assess_order(case)
+
+    surfaces = [
+        Surface(
+            name="supplier_outreach",
+            status="done",
+            gated=False,  # calling to discover is a read
+            detail=suppliers.summary,
+        ),
+        Surface(
+            name="pcp_order",
+            status=order.status.value,
+            gated=True,  # sending a request to the PCP commits on the patient's behalf
+            detail=order.detail,
+        ),
+        Surface(
+            name="coverage",
+            status="checked",
+            gated=False,  # reading the rules is a read
+            detail=f"{coverage.headline} {coverage.estimated_patient_responsibility}",
+        ),
+        Surface(
+            name="patient_update",
+            status="pending_approval",
+            gated=True,  # a patient-facing commitment
+            detail="Status call with the plan, timeline, and expected cost, sent after approval.",
+        ),
+    ]
+
+    escalations = _escalations(case, suppliers, order)
+    plan = CoordinationPlan(
+        plan_id=plan_id,
+        case=case,
+        coverage=coverage,
+        suppliers=suppliers,
+        order=order,
+        surfaces=surfaces,
+        next_action=_next_action(suppliers, order),
+        escalations=escalations,
+    )
+    _PLANS[plan_id] = plan
+    return plan
+
+
+def _escalations(case, suppliers, order) -> list[str]:
+    out = []
+    if order.status != OrderStatus.SIGNED:
+        out.append(
+            "Written order is not signed yet. Nothing delivers or bills until it is, so this is "
+            "the critical-path blocker, not the supplier."
+        )
+    if not suppliers.shortlist:
+        out.append("No supplier can serve her now. Work the callbacks or widen the directory.")
+    for a in suppliers.followups:
+        if a.status == SupplierStatus.NEEDS_RECONTACT:
+            out.append(f"{a.name} agreed then went silent. Re-contact before relying on them.")
+    return out
+
+
+def _next_action(suppliers, order) -> str:
+    if not suppliers.shortlist:
+        return "No ready supplier. Chase the callbacks before promising the patient anything."
+    top = suppliers.shortlist[0].name
+    if order.status != OrderStatus.SIGNED:
+        return (
+            f"Approve the written-order request to the PCP and hold {top} as the lead supplier. "
+            "The order is the blocker; do not confirm delivery until it is signed."
+        )
+    return f"Confirm {top} and schedule delivery, then update the patient."
+
+
+def approve_plan(plan_id: str) -> CoordinationPlan | None:
+    """The care-advocate gate. Only here do the gated surfaces commit."""
+    plan = _PLANS.get(plan_id)
+    if plan is None:
+        return None
+    plan.gate = GateStatus.APPROVED
+    for s in plan.surfaces:
+        if s.gated:
+            s.status = "sent" if s.name == "patient_update" else "approved_to_send"
+    plan.patient_update_script = _patient_update_script(plan)
+    return plan
+
+
+def reject_plan(plan_id: str, reason: str = "") -> CoordinationPlan | None:
+    plan = _PLANS.get(plan_id)
+    if plan is None:
+        return None
+    plan.gate = GateStatus.REJECTED
+    if reason:
+        plan.escalations.insert(0, f"Advocate rejected the plan: {reason}")
+    return plan
+
+
+def _patient_update_script(plan: CoordinationPlan) -> str:
+    """What the patient hears. It states next steps and the likely cost share, and
+    never says she is covered."""
+    first = plan.case.patient_name.split()[0]
+    top = plan.suppliers.shortlist[0].name if plan.suppliers.shortlist else None
+    if top is None:
+        return (
+            f"Hi {first}, this is your care team with an update on your wheelchair. We are "
+            "still lining up a supplier who can deliver to you, and a care advocate is "
+            "working on it personally. We will call you as soon as we have a date. You do "
+            "not need to do anything yet."
+        )
+    order_line = (
+        " Your doctor still needs to sign the written order, and we are on it."
+        if plan.order.status != OrderStatus.SIGNED
+        else ""
+    )
+    return (
+        f"Hi {first}, this is your care team with an update on your wheelchair. We found a "
+        f"supplier who can deliver, {top}.{order_line} On cost: after your Part B deductible, "
+        "Medicare covers most of it and you would owe about 20%. We will call you when "
+        "delivery is scheduled. For now, there is nothing you need to do."
+    )

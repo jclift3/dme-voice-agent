@@ -1,9 +1,10 @@
-"""Shared data shapes for the DME coordination backend.
+"""Data shapes for DME back-end coordination.
 
-These are the contracts between the voice layer (Vapi), the deterministic
-rules, the AI vendor-matching, and the nurse approval gate. Keeping them in
-one place makes the trust boundary legible: what the agent *captures* vs. what
-the rules *decide* vs. what a human *approves*.
+Intake is already done (per the brief). A `Case` starts from a documented patient
+and is worked across four coordination surfaces: supplier outreach, PCP order,
+coverage, and the patient update. These models keep the trust boundary legible:
+what the system discovers and drafts on its own, versus what a care advocate must
+approve before it commits.
 """
 
 from __future__ import annotations
@@ -13,103 +14,127 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
-# Intake, what the voice agent captures on the call (REAL, via Vapi tools)
+# The case (documented intake is the starting state, not something we build)
 # ---------------------------------------------------------------------------
 
 
-class IntakeRequest(BaseModel):
-    """Structured request extracted from the inbound call.
-
-    The agent fills this from natural conversation. `confidence` is the agent's
-    own read of how sure it is, below threshold we route to a human rather
-    than guess (see app/main.py).
-    """
-
-    equipment: str = Field(
-        description="e.g. standard_wheelchair, cpap, walker, hospital_bed, oxygen_concentrator"
-    )
-    plan_id: str | None = Field(
-        default=None, description="Medicare plan id if the patient knows it"
-    )
-    plan_name: str | None = Field(
-        default=None, description="Plan name as spoken, even if id unknown"
-    )
-    zip: str | None = Field(default=None, description="Patient ZIP for in-area matching")
-    pcp_name: str | None = Field(default=None, description="Primary care provider name")
-    recent_visit: bool | None = Field(
-        default=None, description="Had a recent face-to-face PCP visit?"
-    )
-    has_order: bool | None = Field(default=None, description="Does a written order already exist?")
-    urgency: str = Field(default="routine", description="routine | soon | urgent")
-    patient_callback_number: str | None = Field(default=None)
-    confidence: float = Field(
-        default=1.0, ge=0.0, le=1.0, description="Agent's confidence in this capture"
-    )
-    notes: str | None = Field(default=None, description="Anything else worth a nurse seeing")
+class Case(BaseModel):
+    patient_name: str
+    age: int
+    medicare_type: str  # e.g. "Original Medicare (Part B)"
+    has_supplemental: bool
+    equipment: str  # "standard_manual_wheelchair"
+    hcpcs: str  # "K0001"
+    pcp_name: str
+    pcp_practice: str
+    pcp_phone: str
+    pcp_visit_done: bool
+    verbal_order: bool
+    written_order_submitted: bool
 
 
 # ---------------------------------------------------------------------------
-# Coverage requirements, DETERMINISTIC. Never a coverage *determination*.
+# Supplier outreach. The directory is sparse (name/phone/address). Everything
+# that matters is DISCOVERED by calling, then assessed.
+# ---------------------------------------------------------------------------
+
+
+class Supplier(BaseModel):
+    name: str
+    phone: str
+    address: str
+
+
+class Reached(StrEnum):
+    ANSWERED = "answered"
+    VOICEMAIL = "voicemail"
+    NO_ANSWER = "no_answer"
+
+
+class SupplierStatus(StrEnum):
+    CANDIDATE = "candidate"  # reachable, taking patients, in stock, usable
+    WAIT_ONLY = "wait_only"  # in network of options but backordered
+    FLAGGED = "flagged"  # usable but a catch (e.g. no assignment)
+    EXCLUDED = "excluded"  # not taking patients / cannot serve
+    NEEDS_RECALL = "needs_recall"  # no answer or voicemail, try again
+    NEEDS_RECONTACT = "needs_recontact"  # said yes then went silent
+
+
+class SupplierAssessment(BaseModel):
+    name: str
+    reached: Reached
+    taking_new_medicare_patients: bool | None = None
+    stocks_k0001: bool | None = None
+    accepts_assignment: bool | None = None
+    delivery_eta_days: int | None = None
+    approx_miles: float | None = None
+    status: SupplierStatus
+    reason: str  # the one-line a care advocate can verify
+
+
+class SupplierOutreach(BaseModel):
+    shortlist: list[SupplierAssessment]  # ranked, usable now
+    other: list[SupplierAssessment]  # excluded / wait-only / flagged
+    followups: list[SupplierAssessment]  # need a callback or re-contact
+    summary: str
+    used_ai: bool = True
+
+
+# ---------------------------------------------------------------------------
+# PCP order tracking. The interesting decision is when to nudge, not the fax.
+# ---------------------------------------------------------------------------
+
+
+class OrderStatus(StrEnum):
+    NOT_STARTED = "not_started"
+    REQUESTED = "requested"
+    IN_PROGRESS = "in_progress"
+    SIGNED = "signed"
+    STALLED = "stalled"
+
+
+class PcpOrder(BaseModel):
+    status: OrderStatus
+    attempts: int
+    detail: str
+    nudge_after_days: int | None = None  # when to chase again if still unsigned
+
+
+# ---------------------------------------------------------------------------
+# Coverage. DETERMINISTIC. Returns what is needed and what she will owe, never
+# a coverage verdict.
 # ---------------------------------------------------------------------------
 
 
 class CoverageRequirement(BaseModel):
     label: str
-    met: bool | None = None  # None = unknown from intake
+    met: bool | None = None  # None = unknown from the case so far
     detail: str
 
 
-class CoverageChecklist(BaseModel):
+class CoverageCheck(BaseModel):
     equipment: str
-    headline: str  # what's needed, phrased as steps, NOT "you are covered"
+    hcpcs: str
+    headline: str
     requirements: list[CoverageRequirement]
+    prior_auth_required: bool
+    estimated_patient_responsibility: str  # plain-language, e.g. "about 20% coinsurance"
     cms_reference: str | None = None
 
 
 # ---------------------------------------------------------------------------
-# Vendor matching, AI judgment (Claude) over a mocked supplier directory
-# ---------------------------------------------------------------------------
-
-
-class RankedVendor(BaseModel):
-    id: str
-    name: str
-    rank: int
-    in_network: bool
-    in_stock: bool
-    distance_mi: float
-    rationale: str = Field(
-        description="Why this vendor placed here, the reasoning a nurse would want to see"
-    )
-
-
-class ExcludedVendor(BaseModel):
-    id: str
-    name: str
-    reason: str
-
-
-class VendorMatch(BaseModel):
-    shortlist: list[RankedVendor]
-    excluded: list[ExcludedVendor]
-    summary: str = Field(description="One or two sentences a nurse can read at a glance")
-    used_ai: bool = True  # False when the deterministic fallback produced this
-
-
-# ---------------------------------------------------------------------------
-# Coordination plan + the nurse approval gate (human-in-the-loop)
+# Coordination plan + the care-advocate approval gate (human in the loop)
 # ---------------------------------------------------------------------------
 
 
 class GateStatus(StrEnum):
-    PENDING = "pending_nurse_approval"
+    PENDING = "pending_advocate_approval"
     APPROVED = "approved"
     REJECTED = "rejected"
 
 
-class PlanLeg(BaseModel):
-    """One unit of coordination work. `gated` legs touch liability and require
-    nurse approval before any external write or patient-facing commitment."""
+class Surface(BaseModel):
+    """One coordination surface and whether acting on it commits liability."""
 
     name: str
     status: str
@@ -119,11 +144,12 @@ class PlanLeg(BaseModel):
 
 class CoordinationPlan(BaseModel):
     plan_id: str
-    intake: IntakeRequest
-    coverage: CoverageChecklist
-    vendors: VendorMatch
-    legs: list[PlanLeg]
+    case: Case
+    coverage: CoverageCheck
+    suppliers: SupplierOutreach
+    order: PcpOrder
+    surfaces: list[Surface]
+    next_action: str  # what a care advocate should do next
     gate: GateStatus = GateStatus.PENDING
-    callback_script: str | None = None  # filled after approval
-    escalated_to_human: bool = False
-    escalation_reason: str | None = None
+    patient_update_script: str | None = None  # filled after approval
+    escalations: list[str] = Field(default_factory=list)

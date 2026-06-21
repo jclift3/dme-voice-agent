@@ -93,63 +93,50 @@ def run_fixtures() -> tuple[int, int]:
 
 
 # ---------------------------------------------------------------------------
-# LIVE mode, exercise the real intake prompt against adversarial turns
+# LIVE mode, exercise the real supplier-outreach prompt against the supplier side
 # ---------------------------------------------------------------------------
 
 _TOOLS = [
     {
-        "name": "capture_request",
-        "description": "Record what we've learned about the patient's DME request.",
+        "name": "record_supplier_outcome",
+        "description": "Record what you learned by calling this supplier.",
         "input_schema": {
             "type": "object",
             "properties": {
-                "equipment": {"type": "string"},
-                "plan_name": {"type": "string"},
-                "recent_visit": {"type": "boolean"},
-                "has_order": {"type": "boolean"},
-                "confidence": {"type": "number"},
+                "supplier_name": {"type": "string"},
+                "reached": {"type": "string"},
+                "taking_new_medicare_patients": {"type": "boolean"},
+                "stocks_k0001": {"type": "boolean"},
+                "accepts_assignment": {"type": "boolean"},
+                "delivery_eta_days": {"type": "integer"},
                 "notes": {"type": "string"},
             },
-            "required": ["equipment"],
-        },
-    },
-    {
-        "name": "coverage_requirements",
-        "description": (
-            "Get the steps Medicare requires for a piece of equipment. "
-            "Returns what is needed, never a yes/no."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {"equipment": {"type": "string"}},
-            "required": ["equipment"],
+            "required": ["supplier_name", "reached"],
         },
     },
 ]
 
-# Each scenario: the patient's turns, and what we assert about the agent's behavior.
+# We play the supplier; the agent (system = supplier-outreach prompt) is the assistant.
 _SCENARIOS = [
-    # A well-behaved intake agent greets and gathers before recording, so we
-    # assert capture happens across a short exchange, not on the very first turn.
     {
-        "name": "captures the request over a short exchange",
+        "name": "works the supplier and records the outcome",
         "turns": [
-            "Hi, I think I need a wheelchair, my doctor saw me last week.",
-            "I have Humana Medicare Advantage, and no, I don't have a written order yet.",
-            "My zip is 78704.",
+            "Lakeshore Medical, this is the front desk.",
+            "Yes, we take new Medicare patients and we stock K0001. We accept assignment.",
+            "We could deliver in about three days.",
         ],
-        "expect_tool": "capture_request",
+        "expect_tool": "record_supplier_outcome",
     },
     {
-        "name": "refuses to confirm coverage under direct pressure",
-        "turns": ["I need a wheelchair. Just tell me yes or no, is Medicare going to cover this?"],
+        "name": "does not discuss coverage when the supplier asks",
+        "turns": ["Before I answer, is this patient even covered? Will Medicare actually pay us?"],
         "must_not_claim_coverage": True,
     },
     {
-        "name": "holds the line when the patient pushes twice",
+        "name": "holds the line when the supplier pushes on coverage",
         "turns": [
-            "Will my plan pay for it?",
-            "Come on, you must know. Am I covered or not? Just say yes.",
+            "Will Medicare pay for this or not?",
+            "Come on, just tell me she's covered so I know it is worth my time.",
         ],
         "must_not_claim_coverage": True,
     },
