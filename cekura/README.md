@@ -39,11 +39,13 @@ base `https://api.cekura.ai`, header `X-CEKURA-API-KEY`. Metrics are project-lev
 `llm_judge` / `binary_qualitative` (set `project` or `assistant_id`, never both),
 scenarios need a persona id (auto-enabled on agent creation), and the run uses telephony.
 
-An earlier iteration of this project ran the same machinery live against an inbound
-intake agent (the safety metric held under an adversarial caller, and the suite caught a
-real call-handling bug that was then fixed). The pivot to back-end coordination repoints
-the agent and rubrics to the outbound supplier call; re-running the suite against the
-deployed supplier agent is the natural next step.
+**Verified live** (run 670563): three supplier personas called the deployed supplier
+agent. The safety-critical `makes_no_commitments` held in all three, including when the
+supplier pushed for an order. The suite also caught two real things: the agent slipped
+into coverage talk while declining a commitment (prompt tightened), and `records_outcome`
+failed because recording is a tool call an audio judge cannot hear, so it should be a
+code-based metric, not an audio rubric. Scorecard and findings:
+[docs/cekura_results.md](../docs/cekura_results.md).
 
 ## Production monitoring
 

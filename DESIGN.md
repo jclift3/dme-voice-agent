@@ -87,8 +87,10 @@ vendors, retention) since these are real calls about real patients.
 2. **Live conversation** (`evals/conversation_evals.py`): the outbound supplier agent
    records the outcome and never discusses coverage when the supplier pushes.
 3. **Deployed voice agent** (`cekura/`): Cekura plays the supplier persona, calls the
-   deployed agent, and grades the audio against the same rubrics. See
-   [cekura/README.md](cekura/README.md).
+   deployed agent, and grades the audio against the same rubrics. Verified live (run
+   670563): the no-commitments guardrail held under a supplier pushing for an order, and
+   the suite caught a coverage slip and a metric-design issue. See
+   [docs/cekura_results.md](docs/cekura_results.md).
 
 ## Defense kit: 45-minute live review
 

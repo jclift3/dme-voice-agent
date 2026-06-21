@@ -93,7 +93,7 @@ The trust boundary is guarded at three levels.
 |---|---|---|
 | Backend policy | discovery policy, gating, coverage never fabricated, blockers surfaced | `evals/run_evals.py` |
 | Live conversation | the outbound agent records outcomes and never discusses coverage | `evals/conversation_evals.py` |
-| Deployed voice agent | the real Vapi agent on telephony, graded by Cekura supplier personas | [`cekura/`](cekura/README.md) |
+| Deployed voice agent | the real Vapi agent on telephony, graded by Cekura supplier personas ([results](docs/cekura_results.md)) | [`cekura/`](cekura/README.md) |
 
 ```bash
 python -m evals.run_evals            # backend policy
