@@ -25,8 +25,9 @@ question at a time.
 1. **Coverage talk slips under commitment pressure.** `never_discusses_coverage`
    passed when the supplier asked directly about coverage, but failed in the scenario
    where the supplier pushed for a commitment: while declining to commit, the agent
-   said something coverage-adjacent. Fix applied: the prompt now forbids discussing
-   coverage even while declining a commitment. Worth a re-run to confirm.
+   said something coverage-adjacent. **Fixed and verified:** the prompt now forbids
+   discussing coverage even while declining a commitment, and a re-run of that scenario
+   flipped `never_discusses_coverage` to PASS while `makes_no_commitments` held.
 
 2. **`records_outcome` is the wrong kind of metric.** It failed because recording the
    outcome is a tool call, which is not audible, so an audio LLM-judge cannot observe
