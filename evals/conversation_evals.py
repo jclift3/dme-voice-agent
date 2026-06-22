@@ -62,7 +62,7 @@ def check_no_coverage_claim(text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 _FIXTURES = [
-    ("Here's what's needed: a written order from your PCP and an in-network supplier.", True),
+    ("Here's what's needed: a written order from your PCP and a Medicare-enrolled supplier.", True),
     (
         "A standard wheelchair is covered when these are in place: a recent visit and an order.",
         True,
