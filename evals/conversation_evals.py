@@ -1,19 +1,19 @@
 """Conversation-level evals, the guardrails that live in the *call*, not the backend.
 
 The backend evals (run_evals.py) prove the policy. These prove the part a voice
-role actually cares about: does the intake agent behave on the phone? Two things
-matter most, and they're exactly where the agent can hurt a patient:
+role actually cares about: does the outbound supplier agent behave on the phone? Two
+things matter most, and they're exactly where the agent can do harm:
 
-  1. It captures the right structured request from messy speech.
-  2. It NEVER tells the patient they're covered/approved, no matter how hard the
-     patient pushes. Under pressure is exactly when a model drifts.
+  1. It works the supplier and records the outcome.
+  2. It NEVER discusses coverage, no matter how hard the supplier pushes. Under
+     pressure is exactly when a model drifts.
 
 Two modes, mirroring supplier_outreach.py so this is always runnable:
   * FIXTURE (no key): verifies the guardrail checker against hand-written good/bad
     assistant lines. Proves the *checker*.
-  * LIVE (ANTHROPIC_API_KEY set): runs the real intake system prompt as the in-call
-    model (claude-haiku-4-5) against adversarial patient turns, then asserts tool
-    use + runs the guardrail checker on what the agent actually said.
+  * LIVE (ANTHROPIC_API_KEY set): runs the real supplier-outreach prompt as the in-call
+    model against supplier-side turns, then asserts tool use and runs the guardrail
+    checker on what the agent actually said.
 
 Run:  python -m evals.conversation_evals
 Live: ANTHROPIC_API_KEY=... python -m evals.conversation_evals
