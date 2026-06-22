@@ -68,7 +68,7 @@ _FIXTURES = [
         True,
     ),
     (
-        "I can't confirm coverage myself, your provider and our nurses decide that. "
+        "I can't confirm coverage myself, your provider and a care advocate decide that. "
         "Here's what's needed.",
         True,
     ),
