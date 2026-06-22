@@ -8,7 +8,7 @@ matter most, and they're exactly where the agent can hurt a patient:
   2. It NEVER tells the patient they're covered/approved, no matter how hard the
      patient pushes. Under pressure is exactly when a model drifts.
 
-Two modes, mirroring vendor_match.py so this is always runnable:
+Two modes, mirroring supplier_outreach.py so this is always runnable:
   * FIXTURE (no key): verifies the guardrail checker against hand-written good/bad
     assistant lines. Proves the *checker*.
   * LIVE (ANTHROPIC_API_KEY set): runs the real intake system prompt as the in-call
