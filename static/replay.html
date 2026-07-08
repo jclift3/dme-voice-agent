@@ -9,6 +9,7 @@
     --bg:#f7f6f3; --card:#fff; --ink:#1f2328; --muted:#6b7280; --line:#e5e7eb;
     --green:#1a7f4b; --green-bg:#e7f5ec; --amber:#b25e09; --amber-bg:#fdf3e7;
     --red:#b42318; --red-bg:#fdeceb; --gray-bg:#f1f2f4; --blue:#0c447c; --blue-bg:#e6f1fb;
+    --brand:#a2543b; --brand-dark:#7a3b29; --cream:#f5e4c5;
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--ink);
@@ -18,11 +19,14 @@
   .caption .dot { width:9px; height:9px; border-radius:50%; background:#e5484d; flex:none; animation:pulse 1.2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
   .caption .step { color:#8b98a5; font-size:12px; margin-left:auto; flex:none; }
-  header { padding:14px 24px; border-bottom:1px solid var(--line); background:var(--card); }
+  header { padding:12px 24px; border-top:3px solid var(--brand); border-bottom:1px solid var(--line); background:var(--card);
+    display:flex; align-items:center; gap:14px; }
+  header .logo { height:28px; width:auto; }
+  header .divider { width:1px; align-self:stretch; background:var(--line); }
   header h1 { font-size:16px; font-weight:600; margin:0; }
   header .sub { color:var(--muted); font-size:13px; }
-  .legend { padding:8px 24px; background:var(--blue-bg); color:var(--blue); font-size:12.5px; border-bottom:1px solid var(--line); }
-  .legend b { font-weight:600; }
+  .legend { padding:8px 24px; background:var(--cream); color:var(--brand-dark); font-size:12.5px; border-bottom:1px solid var(--line); }
+  .legend b { font-weight:600; color:var(--brand-dark); }
   main { padding:20px 24px; max-width:760px; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
   .card-head { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -55,8 +59,12 @@
 <body>
 <div class="caption"><span class="dot"></span><span id="cap">Loading…</span><span class="step" id="stp"></span></div>
 <header>
-  <h1>DME coordination: care-advocate console</h1>
-  <div class="sub">Calling to discover is automatic. Everything below the trust boundary needs approval.</div>
+  <img class="logo" src="/static/mm-logo.png" alt="Mira Mace" />
+  <div class="divider"></div>
+  <div>
+    <h1>DME coordination: care-advocate console</h1>
+    <div class="sub">Calling to discover is automatic. Everything below the trust boundary needs approval.</div>
+  </div>
 </header>
 <div class="legend"><b>Real:</b> the coordination reasoning and the deployed Vapi voice agent. <b>Simulated in this view:</b> the supplier call outcomes and the directory. The real calls run on the voice + Cekura layer.</div>
 <main><div class="card" id="card"></div></main>
