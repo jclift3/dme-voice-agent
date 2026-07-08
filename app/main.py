@@ -44,9 +44,18 @@ def health() -> dict:
 
 @app.post("/case/build")
 def build_case() -> JSONResponse:
-    """Work Eleanor's case across the four surfaces and return the plan."""
-    plan = orchestrator.build_plan(ELEANOR)
+    """Work Eleanor's case across the four surfaces. Idempotent: one case at a time,
+    so clicking build twice reuses the existing plan rather than duplicating it."""
+    existing = orchestrator.all_plans()
+    plan = existing[0] if existing else orchestrator.build_plan(ELEANOR)
     return JSONResponse({"plan_id": plan.plan_id})
+
+
+@app.post("/case/reset")
+def reset_case() -> JSONResponse:
+    """Clear the case so the demo can be run again from a clean slate."""
+    orchestrator.clear_plans()
+    return JSONResponse({"ok": True})
 
 
 @app.get("/plans")

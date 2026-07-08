@@ -8,12 +8,12 @@
   :root {
     --bg:#f7f6f3; --card:#fff; --ink:#1f2328; --muted:#6b7280; --line:#e5e7eb;
     --green:#1a7f4b; --green-bg:#e7f5ec; --amber:#b25e09; --amber-bg:#fdf3e7;
-    --red:#b42318; --red-bg:#fdeceb; --gray-bg:#f1f2f4;
+    --red:#b42318; --red-bg:#fdeceb; --gray-bg:#f1f2f4; --blue:#0c447c; --blue-bg:#e6f1fb;
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--ink);
     font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-  header { padding:18px 24px; border-bottom:1px solid var(--line); background:var(--card);
+  header { padding:16px 24px; border-bottom:1px solid var(--line); background:var(--card);
     display:flex; align-items:center; gap:16px; flex-wrap:wrap; position:sticky; top:0; z-index:5; }
   header h1 { font-size:17px; font-weight:600; margin:0; }
   header .sub { color:var(--muted); font-size:13px; }
@@ -23,7 +23,10 @@
   button:hover { background:var(--gray-bg); }
   button.primary { background:var(--green); color:#fff; border-color:var(--green); }
   button.danger { color:var(--red); border-color:#f1c4c0; }
-  main { padding:20px 24px; display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(480px,1fr)); }
+  .legend { padding:8px 24px; background:var(--blue-bg); color:var(--blue); font-size:12.5px;
+    border-bottom:1px solid var(--line); }
+  .legend b { font-weight:600; }
+  main { padding:20px 24px; display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(520px,1fr)); }
   .empty { color:var(--muted); padding:40px; text-align:center; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
   .card-head { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -35,13 +38,15 @@
   section { padding:12px 16px; border-bottom:1px solid var(--line); }
   section:last-child { border-bottom:0; }
   .label { font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:0 0 8px; }
+  .label .mock { color:var(--amber); font-weight:600; }
   .row { display:flex; gap:8px; font-size:14px; margin:4px 0; align-items:baseline; }
   .met { color:var(--green); } .unmet { color:var(--amber); } .unknown { color:var(--muted); }
   .why { color:var(--muted); font-size:13px; }
-  .pill { font-size:10px; font-weight:600; padding:1px 7px; border-radius:999px; flex:none; }
+  .pill { font-size:10px; font-weight:600; padding:1px 7px; border-radius:999px; flex:none; min-width:64px; text-align:center; }
   .p-cand { background:var(--green-bg); color:var(--green); }
   .p-follow { background:var(--amber-bg); color:var(--amber); }
   .p-other { background:var(--gray-bg); color:var(--muted); }
+  .p-dial { background:var(--blue-bg); color:var(--blue); }
   .summary { font-size:13px; color:var(--muted); margin:0 0 8px; }
   .next { padding:12px 16px; background:var(--green-bg); font-size:14px; }
   .next .label { color:var(--green); }
@@ -56,6 +61,8 @@
   .actions { padding:12px 16px; display:flex; gap:8px; }
   .script { padding:12px 16px; background:var(--green-bg); font-size:13px; }
   .meta { font-size:13px; color:var(--muted); }
+  .dialing { padding:12px 16px; }
+  .dialing .status { font-size:13px; color:var(--muted); margin-bottom:8px; }
 </style>
 </head>
 <body>
@@ -66,19 +73,32 @@
   </div>
   <div class="spacer"></div>
   <button class="primary" onclick="build()">Build Eleanor's case</button>
+  <button onclick="reset()">Reset</button>
 </header>
-<main id="plans"><div class="empty">No cases yet. Click "Build Eleanor's case" to work it across the four surfaces.</div></main>
+<div class="legend">
+  <b>Real:</b> the coordination reasoning (bucketing, ranking, coverage rules, blockers, the gate) and the deployed Vapi voice agent.
+  <b>Simulated in this web view:</b> the supplier call outcomes and the directory. The actual phone calls run on the voice + Cekura layer, not this page.
+</div>
+<main id="plans"><div class="empty">No case loaded. Click "Build Eleanor's case" to work it across the four surfaces.</div></main>
 
 <script>
 const esc = s => (s||"").replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const gateFmt = g => ({pending_advocate_approval:["b-pending","pending approval"],approved:["b-approved","approved"],rejected:["b-rejected","rejected"]}[g]||["b-pending",g]);
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+let animating = false;
 
 function reqRow(r){
   const cls = r.met===true?"met":r.met===false?"unmet":"unknown";
   const m = r.met===true?"✓":r.met===false?"○":"–";
   return `<div class="row"><span class="${cls}">${m}</span><span>${esc(r.detail)}</span></div>`;
 }
-function supplierRow(a, pill, cls){
+function pillFor(a){
+  if(a.status==="candidate") return ["READY","p-cand"];
+  if(a.status==="needs_recall"||a.status==="needs_recontact") return ["CALL BACK","p-follow"];
+  return [a.status.replace(/_/g," "),"p-other"];
+}
+function supplierRow(a){
+  const [pill,cls] = pillFor(a);
   const eta = a.delivery_eta_days!=null?`${a.delivery_eta_days}d`:"";
   const mi = a.approx_miles!=null?` · ${a.approx_miles}mi`:"";
   return `<div class="row"><span class="pill ${cls}">${pill}</span><span>${esc(a.name)} <span class="why">${eta}${mi}</span><div class="why">${esc(a.reason)}</div></span></div>`;
@@ -102,17 +122,17 @@ function card(p){
 
     ${p.escalations.length?`<div class="escalate"><p class="label">Blockers</p>${p.escalations.map(e=>`<div>! ${esc(e)}</div>`).join("")}</div>`:""}
 
+    <section><p class="label">Supplier outreach · <span class="mock">simulated call outcomes</span> · ${su.used_ai?"AI / Claude":"deterministic"}</p>
+      <div class="summary">${esc(su.summary)}</div>
+      ${su.shortlist.map(supplierRow).join("")}
+      ${su.followups.map(supplierRow).join("")}
+      ${su.other.map(supplierRow).join("")}
+    </section>
+
     <section><p class="label">Coverage · steps needed and cost (not a coverage decision)</p>
       <div class="summary">${esc(cov.headline)}</div>
       ${cov.requirements.map(reqRow).join("")}
       <div class="row"><span class="det">Prior authorization: ${cov.prior_auth_required?"required":"not required"}. ${esc(cov.estimated_patient_responsibility)}</span></div>
-    </section>
-
-    <section><p class="label">Supplier outreach · ${su.used_ai?"AI / Claude":"deterministic"}</p>
-      <div class="summary">${esc(su.summary)}</div>
-      ${su.shortlist.map(a=>supplierRow(a,"READY","p-cand")).join("")}
-      ${su.followups.map(a=>supplierRow(a,"CALL BACK","p-follow")).join("")}
-      ${su.other.map(a=>supplierRow(a,a.status.replace(/_/g," "),"p-other")).join("")}
     </section>
 
     <section><p class="label">Coordination surfaces</p>
@@ -128,12 +148,44 @@ function card(p){
   </div>`;
 }
 
+// One-time "working the supplier list" reveal so the discovery reads as calls, not a snapshot.
+async function animateDiscovery(p){
+  const el = document.getElementById("plans");
+  const all = [...p.suppliers.shortlist, ...p.suppliers.followups, ...p.suppliers.other]
+    .sort((a,b)=>a.name.localeCompare(b.name));
+  el.innerHTML = `<div class="card"><div class="card-head"><span class="meta">Working the supplier list (9 enrolled suppliers, phone only)</span></div>
+    <div class="dialing"><div class="status" id="dstat">Calling suppliers one at a time…</div><div id="dial"></div></div></div>`;
+  const dial = document.getElementById("dial"), stat = document.getElementById("dstat");
+  for(let i=0;i<all.length;i++){
+    const a = all[i];
+    const row = document.createElement("div"); row.className="row";
+    row.innerHTML = `<span class="pill p-dial">☎ dialing</span><span>${esc(a.name)} <span class="why">${esc(a.phone||"")}</span></span>`;
+    dial.appendChild(row);
+    stat.textContent = `Calling ${a.name}…`;
+    await sleep(360);
+    row.outerHTML = supplierRow(a);  // flip from "dialing" to the assessed outcome
+    await sleep(120);
+  }
+  stat.textContent = "Done. Assessing and ranking what we learned…";
+  await sleep(650);
+}
+
 async function refresh(){
+  if(animating) return;
   const plans = await (await fetch("/plans")).json();
   const el = document.getElementById("plans");
-  el.innerHTML = plans.length ? plans.map(card).join("") : `<div class="empty">No cases yet. Click "Build Eleanor's case" above.</div>`;
+  el.innerHTML = plans.length ? plans.map(card).join("") : `<div class="empty">No case loaded. Click "Build Eleanor's case" above.</div>`;
 }
-async function build(){ await fetch("/case/build",{method:"POST"}); refresh(); }
+async function build(){
+  animating = true;
+  try {
+    await fetch("/case/build",{method:"POST"});
+    const plans = await (await fetch("/plans")).json();
+    if(plans.length && plans[0].gate==="pending_advocate_approval") await animateDiscovery(plans[0]);
+    document.getElementById("plans").innerHTML = plans.map(card).join("");
+  } finally { animating = false; }
+}
+async function reset(){ animating=false; await fetch("/case/reset",{method:"POST"}); refresh(); }
 async function act(id,what){ await fetch(`/plans/${id}/${what}`,{method:"POST"}); refresh(); }
 
 refresh();

@@ -18,6 +18,7 @@ It runs on the deterministic path, so no keys are needed and nothing external is
 | Document | What it is |
 |---|---|
 | [WRITEUP.md](WRITEUP.md) | The writeup: sequencing, technology and architecture, cut list, what's next. Read this first. |
+| [WALKTHROUGH.md](WALKTHROUGH.md) | A narrated 10-minute demo script, with what's real vs simulated called out at each step. |
 | This README | The fuller walkthrough and how to run everything. |
 | [DESIGN.md](DESIGN.md) | Decision log (every choice and the alternatives rejected) and a defense kit. |
 | [cekura/README.md](cekura/README.md) | The voice-eval layer for the outbound agents. |

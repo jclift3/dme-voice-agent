@@ -34,6 +34,10 @@ def all_plans() -> list[CoordinationPlan]:
     return list(_PLANS.values())
 
 
+def clear_plans() -> None:
+    _PLANS.clear()
+
+
 def get_plan(plan_id: str) -> CoordinationPlan | None:
     return _PLANS.get(plan_id)
 
