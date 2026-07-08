@@ -33,6 +33,16 @@ def console() -> FileResponse:
     return FileResponse(_CONSOLE, headers={"Cache-Control": "no-store"})
 
 
+_REPLAY = Path(__file__).resolve().parent.parent / "static" / "replay.html"
+
+
+@app.get("/replay")
+def replay() -> FileResponse:
+    """A self-playing walkthrough of the whole flow (no backend calls). Present it
+    live or screen-record it as a demo backup."""
+    return FileResponse(_REPLAY, headers={"Cache-Control": "no-store"})
+
+
 @app.get("/health")
 def health() -> dict:
     return {"ok": True}

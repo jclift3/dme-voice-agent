@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DME coordination: demo replay</title>
+<style>
+  :root {
+    --bg:#f7f6f3; --card:#fff; --ink:#1f2328; --muted:#6b7280; --line:#e5e7eb;
+    --green:#1a7f4b; --green-bg:#e7f5ec; --amber:#b25e09; --amber-bg:#fdf3e7;
+    --red:#b42318; --red-bg:#fdeceb; --gray-bg:#f1f2f4; --blue:#0c447c; --blue-bg:#e6f1fb;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  .caption { position:sticky; top:0; z-index:10; background:#0f1720; color:#fff; padding:14px 24px;
+    font-size:15px; display:flex; align-items:center; gap:12px; min-height:52px; }
+  .caption .dot { width:9px; height:9px; border-radius:50%; background:#e5484d; flex:none; animation:pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .caption .step { color:#8b98a5; font-size:12px; margin-left:auto; flex:none; }
+  header { padding:14px 24px; border-bottom:1px solid var(--line); background:var(--card); }
+  header h1 { font-size:16px; font-weight:600; margin:0; }
+  header .sub { color:var(--muted); font-size:13px; }
+  .legend { padding:8px 24px; background:var(--blue-bg); color:var(--blue); font-size:12.5px; border-bottom:1px solid var(--line); }
+  .legend b { font-weight:600; }
+  main { padding:20px 24px; max-width:760px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .card-head { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .card-head .id { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; color:var(--muted); }
+  .badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:999px; }
+  .b-pending { background:var(--amber-bg); color:var(--amber); } .b-approved { background:var(--green-bg); color:var(--green); }
+  .meta { font-size:13px; color:var(--muted); }
+  section { padding:12px 16px; border-bottom:1px solid var(--line); }
+  section:last-child { border-bottom:0; }
+  .label { font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:0 0 8px; }
+  .label .mock { color:var(--amber); font-weight:600; }
+  .row { display:flex; gap:8px; font-size:14px; margin:4px 0; align-items:baseline; }
+  .met { color:var(--green); } .unmet { color:var(--amber); } .unknown { color:var(--muted); }
+  .why { color:var(--muted); font-size:13px; }
+  .pill { font-size:10px; font-weight:600; padding:1px 7px; border-radius:999px; flex:none; min-width:66px; text-align:center; }
+  .p-cand { background:var(--green-bg); color:var(--green); } .p-follow { background:var(--amber-bg); color:var(--amber); }
+  .p-other { background:var(--gray-bg); color:var(--muted); } .p-dial { background:var(--blue-bg); color:var(--blue); }
+  .summary { font-size:13px; color:var(--muted); margin:0 0 8px; }
+  .next { padding:12px 16px; background:var(--green-bg); font-size:14px; } .next .label { color:var(--green); }
+  .escalate { padding:10px 16px; background:var(--red-bg); color:var(--red); font-size:13px; } .escalate div { margin:3px 0; }
+  .boundary { display:flex; align-items:center; gap:10px; margin:12px 0 8px; color:var(--amber); font-size:12px; font-weight:600; }
+  .boundary::before,.boundary::after { content:""; height:1px; flex:1; background:repeating-linear-gradient(90deg,var(--amber) 0 4px,transparent 4px 8px); opacity:.5; }
+  .tag { font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px; flex:none; }
+  .tag.auto { background:var(--green-bg); color:var(--green); } .tag.gated { background:var(--amber-bg); color:var(--amber); }
+  .det { color:var(--muted); font-size:13px; }
+  .script { padding:12px 16px; background:var(--green-bg); font-size:13px; }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+<div class="caption"><span class="dot"></span><span id="cap">Loading…</span><span class="step" id="stp"></span></div>
+<header>
+  <h1>DME coordination: care-advocate console</h1>
+  <div class="sub">Calling to discover is automatic. Everything below the trust boundary needs approval.</div>
+</header>
+<div class="legend"><b>Real:</b> the coordination reasoning and the deployed Vapi voice agent. <b>Simulated in this view:</b> the supplier call outcomes and the directory. The real calls run on the voice + Cekura layer.</div>
+<main><div class="card" id="card"></div></main>
+
+<script>
+const S = [
+  {name:"Lakeshore Medical Supply", phone:"(312) 555-0142", status:"candidate", eta:3, mi:1.4, reason:"Taking patients, K0001 in stock, accepts assignment, ~3 day delivery."},
+  {name:"Windy City Home Medical", phone:"(312) 555-0177", status:"candidate", eta:7, mi:2.1, reason:"Taking patients, K0001 in stock, accepts assignment, ~7 day delivery."},
+  {name:"North Side Mobility", phone:"(773) 555-0119", status:"needs_recall", mi:3.8, reason:"No answer, no voicemail. Call back before ruling them out."},
+  {name:"Prairie DME Solutions", phone:"(312) 555-0188", status:"excluded", mi:2.6, reason:"Not taking new Medicare patients right now."},
+  {name:"Loop Medical Equipment", phone:"(312) 555-0156", status:"wait_only", eta:14, mi:2.9, reason:"K0001 backordered (~14 days). Only if she can wait."},
+  {name:"Southwest Care Supply", phone:"(773) 555-0164", status:"needs_recall", mi:7.2, reason:"Left a voicemail. Call back before ruling them out."},
+  {name:"Great Lakes Mobility", phone:"(312) 555-0133", status:"needs_recontact", eta:5, mi:1.9, reason:"Agreed on the call but never sent confirmation. Chase before relying on them."},
+  {name:"Cicero Medical Supply", phone:"(708) 555-0171", status:"flagged", eta:4, mi:8.6, reason:"Does not accept assignment, so she would pay more. Use only if needed."},
+  {name:"Evanston Home Health", phone:"(847) 555-0125", status:"candidate", eta:5, mi:11.8, reason:"Taking patients, K0001 in stock, accepts assignment, ~5 day delivery."},
+];
+const ORDER_SHORTLIST = ["Lakeshore Medical Supply","Evanston Home Health","Windy City Home Medical"];
+const pill = s => s==="candidate"?["READY","p-cand"]:(s==="needs_recall"||s==="needs_recontact")?["CALL BACK","p-follow"]:[s.replace(/_/g," "),"p-other"];
+const supRow = a => { const [p,c]=pill(a.status); const e=a.eta!=null?`${a.eta}d`:""; const m=a.mi!=null?` · ${a.mi}mi`:"";
+  return `<div class="row"><span class="pill ${c}">${p}</span><span>${a.name} <span class="why">${e}${m}</span><div class="why">${a.reason}</div></span></div>`; };
+const byName = n => S.find(x=>x.name===n);
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const cap=document.getElementById('cap'), stp=document.getElementById('stp'), card=document.getElementById('card');
+function say(t,n){ cap.textContent=t; stp.textContent=n; }
+
+const COV = `<section><p class="label">Coverage · steps needed and cost (not a coverage decision)</p>
+  <div class="summary">A standard manual wheelchair (K0001) is covered under Medicare Part B as DME when these are in place:</div>
+  <div class="row"><span class="met">✓</span><span>A face-to-face exam with the treating provider documenting the mobility need.</span></div>
+  <div class="row"><span class="unmet">○</span><span>A written order signed by the PCP and on file with the supplier.</span></div>
+  <div class="row"><span class="unknown">–</span><span>A Medicare-enrolled supplier that accepts assignment, so she owes the least.</span></div>
+  <div class="row"><span class="unknown">–</span><span>The chair is medically necessary for mobility within the home (the provider's call).</span></div>
+  <div class="row"><span class="det">Prior authorization: not required. After the Part B deductible, about 20% coinsurance. Eleanor has no supplemental plan, so she pays that share herself.</span></div></section>`;
+const NEXT = `<div class="next"><p class="label">Next action</p>Approve the written-order request to the PCP and hold Lakeshore Medical Supply as the lead supplier. The order is the blocker; do not confirm delivery until it is signed.</div>`;
+const BLOCK = `<div class="escalate"><p class="label">Blockers</p><div>! Written order is not signed yet. Nothing delivers or bills until it is, so this is the critical-path blocker, not the supplier.</div><div>! Great Lakes Mobility agreed then went silent. Re-contact before relying on them.</div></div>`;
+const SCRIPT = `<div class="script"><p class="label">Patient update (sent)</p>Hi Eleanor, this is your care team with an update on your wheelchair. We found a supplier who can deliver, Lakeshore Medical Supply. Your doctor still needs to sign the written order, and we are on it. On cost: after your Part B deductible, Medicare covers most of it and you would owe about 20%. We will call you when delivery is scheduled. For now, there is nothing you need to do.</div>`;
+const head = gate => `<div class="card-head"><span class="id">case_eleanor</span><span class="meta">Eleanor Martinez, 72 · Original Medicare (Part B) · standard manual wheelchair (K0001)</span><span class="badge ${gate==='approved'?'b-approved':'b-pending'}">${gate==='approved'?'approved':'pending approval'}</span></div>`;
+
+function board(gate){
+  const short = ORDER_SHORTLIST.map(byName), shortNames=new Set(ORDER_SHORTLIST);
+  const follow = S.filter(a=>a.status==="needs_recall"||a.status==="needs_recontact");
+  const other = S.filter(a=>a.status==="excluded"||a.status==="wait_only"||a.status==="flagged");
+  const surf = `<section><p class="label">Coordination surfaces</p>
+    <div class="row"><span class="tag auto">AUTO</span><span>supplier_outreach <span class="det">done · worked 9 suppliers</span></span></div>
+    <div class="row"><span class="tag auto">AUTO</span><span>coverage <span class="det">checked</span></span></div>
+    <div class="boundary">trust boundary · approval required below</div>
+    <div class="row"><span class="tag gated">GATED</span><span>pcp_order <span class="det">${gate==='approved'?'approved_to_send':'requested'} · request the written order from Dr. Sarah Chen</span></span></div>
+    <div class="row"><span class="tag gated">GATED</span><span>patient_update <span class="det">${gate==='approved'?'sent':'pending_approval'}</span></span></div></section>`;
+  return head(gate)+NEXT+BLOCK+
+    `<section><p class="label">Supplier outreach · <span class="mock">simulated call outcomes</span> · deterministic</p>
+      <div class="summary">Worked 9 suppliers: 3 can serve her now (top pick Lakeshore Medical Supply), 3 need a callback, 3 can't serve now.</div>
+      ${short.map(supRow).join("")}${follow.map(supRow).join("")}${other.map(supRow).join("")}</section>`+
+    COV+surf+(gate==='approved'?SCRIPT:'');
+}
+
+const AUDIT = () => {
+  const evs = S.map((a,i)=>`<div class="row"><span class="why" style="min-width:58px">13:58:${(40+i)}</span><span class="pill p-other">system</span><span><b>supplier call</b> · ${a.name} <span class="why">(${a.status})</span></span></div>`);
+  evs.push(`<div class="row"><span class="why" style="min-width:58px">13:58:49</span><span class="pill p-other">system</span><span><b>coverage check</b> · K0001 (checked)</span></div>`);
+  evs.push(`<div class="row"><span class="why" style="min-width:58px">13:58:50</span><span class="pill p-follow">advocate</span><span><b>approval</b> · Eleanor Martinez (approved)</span></div>`);
+  evs.push(`<div class="row"><span class="why" style="min-width:58px">13:58:50</span><span class="pill p-other">system</span><span><b>order request</b> · Dr. Sarah Chen (sent)</span></div>`);
+  evs.push(`<div class="row"><span class="why" style="min-width:58px">13:58:50</span><span class="pill p-other">system</span><span><b>patient call</b> · Eleanor Martinez (sent)</span></div>`);
+  return `<section><p class="label">Interaction log · every call and decision is recorded</p>${evs.join("")}<div class="why" style="margin-top:8px">This trail is the record of what happened, and the substrate for improvement: label outcomes to tune ranking and prompts, and Cekura monitors the real calls in production.</div></section>`;
+};
+
+async function run(){
+  // 1. case
+  say("Intake is done. We start from Eleanor's documented case: a K0001 wheelchair, Original Medicare Part B.","1 / 5");
+  card.innerHTML = head('pending'); await sleep(2600);
+  // 2. dialing
+  say("The directory is sparse (name, phone, address). We learn everything by calling. Watch it work the list.","2 / 5");
+  card.innerHTML = head('pending')+`<section><p class="label">Supplier outreach · <span class="mock">simulated call outcomes</span></p><div id="dial"></div></section>`;
+  const dial=document.getElementById('dial');
+  const orderAll=[...S].sort((a,b)=>a.name.localeCompare(b.name));
+  for(const a of orderAll){
+    const r=document.createElement('div'); r.className='row'; r.innerHTML=`<span class="pill p-dial">☎ dialing</span><span>${a.name} <span class="why">${a.phone}</span></span>`;
+    dial.appendChild(r); await sleep(480); r.outerHTML=supRow(a); await sleep(140);
+  }
+  await sleep(1400);
+  // 3. board
+  say("Three can serve her now, three need a callback (incl. Great Lakes, which said yes then went silent), three can't. None of that was in the directory.","3 / 5");
+  card.innerHTML = board('pending'); await sleep(6500);
+  // 4. blocker + gate
+  say("The real blocker is the unsigned written order, not the supplier. Discovery ran automatically; the order request and the patient call are gated.","4 / 5");
+  await sleep(5200);
+  // 5. approve
+  say("The care advocate approves. The order request goes out, the patient is called, and the update never claims coverage. Every step is recorded.","5 / 5");
+  card.innerHTML = board('approved')+AUDIT(); await sleep(9000);
+}
+async function loop(){ while(true){ await run(); say("Replay ends. Looping…","•"); await sleep(2500); } }
+loop();
+</script>
+</body>
+</html>
