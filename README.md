@@ -10,6 +10,9 @@ advocate in charge of anything that commits.
 commits on the patient's behalf is gated behind a care advocate and is reversible. The
 system says "here's what's needed and what you'll owe," never "you're covered."
 
+**Live demo:** https://dme-coordination-jclift3.fly.dev/ (click "Build Eleanor's case").
+It runs on the deterministic path, so no keys are needed and nothing external is called.
+
 ## Where to find things
 
 | Document | What it is |

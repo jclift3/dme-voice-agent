@@ -65,6 +65,13 @@ is critical path, so it surfaces that as the next action, not "found a supplier,
   is not appropriate for a take-home.
 - **Persistence, auth, a multi-case queue:** skipped per the brief. One case, in memory.
 - **Patient intake:** out of scope per the updated brief.
+- **Three of the five failure modes.** I went deep on the supplier-side ones (can't
+  serve, said-yes-then-silent, no answer) because that is the surface where the time
+  goes. Left for later, and named so I can defend the cut: the order arriving wrong (a
+  billing-code mismatch on the claim), the patient going quiet on the callback, and
+  active recovery when the PCP order stalls in a queue. I surface the stalled order as
+  the critical-path blocker today, but I do not yet run the re-send loop. Depth on
+  supplier outreach over breadth across all five.
 
 ## What's next
 
@@ -77,8 +84,10 @@ supplier.
 **With two weeks:** in priority order. First, an SLA timer with alerting on stalled
 orders and silent suppliers, because that invisible failure mode is the one that quietly
 loses a week. Then persistence and a real case queue so one advocate can carry many
-cases. Then the real PCP order leg via fax or EHR behind the existing gate. Then a
-learned supplier-ranking model once call-outcome history exists.
+cases. Then the real PCP order leg via fax or EHR behind the existing gate. Then close
+the remaining failure modes: validate the billing code before the claim goes out (the
+order-is-wrong case), and add patient-goes-quiet handling to the callback (retry and a
+fallback channel). Then a learned supplier-ranking model once call-outcome history exists.
 
 The order is deliberate: make discovery real, then make the failure-catching real, then
 scale, then optimize. Catching stalls early is the care advocate's actual skill, so that
