@@ -107,6 +107,11 @@ function surfaceRow(s){
   const tag = s.gated?`<span class="tag gated">GATED</span>`:`<span class="tag auto">AUTO</span>`;
   return `<div class="row">${tag}<span>${esc(s.name)} <span class="det">${esc(s.status)} · ${esc(s.detail)}</span></span></div>`;
 }
+function auditRow(e){
+  const who = e.actor==="care_advocate"?"advocate":"system";
+  const cls = e.actor==="care_advocate"?"p-follow":"p-other";
+  return `<div class="row"><span class="why" style="min-width:58px">${esc(e.when)}</span><span class="pill ${cls}">${who}</span><span><b>${esc(e.action.replace(/_/g," "))}</b> · ${esc(e.target)}${e.outcome?` <span class="why">(${esc(e.outcome)})</span>`:""}<div class="why">${esc(e.detail)}</div></span></div>`;
+}
 
 function card(p){
   const [bcls,btxt] = gateFmt(p.gate);
@@ -139,6 +144,11 @@ function card(p){
       ${auto.map(surfaceRow).join("")}
       <div class="boundary">trust boundary · approval required below</div>
       ${gated.map(surfaceRow).join("")}
+    </section>
+
+    <section><p class="label">Interaction log · every call and decision is recorded (${p.audit.length})</p>
+      ${p.audit.map(auditRow).join("")}
+      <div class="why" style="margin-top:8px">This trail is the record of what happened, and the substrate for improvement: label outcomes to tune ranking and prompts, and Cekura monitors the real calls in production.</div>
     </section>
 
     ${p.patient_update_script?`<div class="script"><p class="label">Patient update (sent)</p>${esc(p.patient_update_script)}</div>`:""}

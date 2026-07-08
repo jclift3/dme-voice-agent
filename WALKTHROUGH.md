@@ -71,6 +71,13 @@ the plan, the timeline, and the roughly 20% cost, and it never claims coverage."
 calls of legwork and handed me one decision. It cannot commit or make a coverage call
 without a person."
 
+**DO:** Scroll to the **Interaction log**.
+**SAY:** "Every call and decision is recorded: which supplier was phoned, what was asked,
+what came back, the coverage check, and the advocate's approval, with timestamps and who
+did what. This is the auditability. It answers 'where is the record of those calls,' and
+it is the substrate for improvement: you label these outcomes to tune the ranking and the
+prompts, and in production Cekura monitors the real calls against the same rubrics."
+
 ## Part 3 — The voice and eval reality (3 min)
 This is where the real calls live, and it is the most important part for a voice role.
 **SAY:** "The web view simulated the calls so the demo is deterministic. But the outbound

@@ -29,7 +29,8 @@ _CONSOLE = Path(__file__).resolve().parent.parent / "static" / "console.html"
 
 @app.get("/")
 def console() -> FileResponse:
-    return FileResponse(_CONSOLE)
+    # no-store so a reviewer always gets the current console, never a stale cache
+    return FileResponse(_CONSOLE, headers={"Cache-Control": "no-store"})
 
 
 @app.get("/health")

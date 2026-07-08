@@ -14,9 +14,11 @@ No persistent DB on purpose (per the brief). Plans live in memory.
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 
 from .coverage import coverage_check
 from .models import (
+    AuditEvent,
     Case,
     CoordinationPlan,
     GateStatus,
@@ -25,7 +27,12 @@ from .models import (
     SupplierStatus,
     Surface,
 )
-from .supplier_outreach import work_suppliers
+from .supplier_outreach import load_directory, work_suppliers
+
+
+def _now() -> str:
+    return datetime.now(UTC).strftime("%H:%M:%S")
+
 
 _PLANS: dict[str, CoordinationPlan] = {}
 
@@ -98,9 +105,60 @@ def build_plan(case: Case) -> CoordinationPlan:
         surfaces=surfaces,
         next_action=_next_action(suppliers, order),
         escalations=escalations,
+        audit=_build_audit(case, suppliers, order),
     )
     _PLANS[plan_id] = plan
     return plan
+
+
+def _build_audit(case, suppliers, order) -> list[AuditEvent]:
+    """The record of what the system did: every supplier call it placed, then the
+    coverage check and the drafted order request. Recorded in the order calls were made."""
+    events: list[AuditEvent] = []
+    by_name = {a.name: a for a in (suppliers.shortlist + suppliers.followups + suppliers.other)}
+    seq = 0
+    for s in load_directory():
+        a = by_name.get(s.name)
+        if a is None:
+            continue
+        seq += 1
+        events.append(
+            AuditEvent(
+                seq=seq,
+                when=_now(),
+                actor="system",
+                action="supplier_call",
+                target=a.name,
+                detail=f"Called {s.phone}. Asked: taking new Medicare patients, K0001 in stock, "
+                f"accepts assignment, delivery ETA. Reached: {a.reached.value}.",
+                outcome=a.status.value,
+            )
+        )
+    seq += 1
+    events.append(
+        AuditEvent(
+            seq=seq,
+            when=_now(),
+            actor="system",
+            action="coverage_check",
+            target=case.hcpcs,
+            detail="Checked Medicare Part B coverage rules for K0001.",
+            outcome="checked",
+        )
+    )
+    seq += 1
+    events.append(
+        AuditEvent(
+            seq=seq,
+            when=_now(),
+            actor="system",
+            action="order_request",
+            target=case.pcp_name,
+            detail=order.detail,
+            outcome=order.status.value,
+        )
+    )
+    return events
 
 
 def _escalations(case, suppliers, order) -> list[str]:
@@ -140,6 +198,41 @@ def approve_plan(plan_id: str) -> CoordinationPlan | None:
         if s.gated:
             s.status = "sent" if s.name == "patient_update" else "approved_to_send"
     plan.patient_update_script = _patient_update_script(plan)
+
+    seq = len(plan.audit)
+    plan.audit.append(
+        AuditEvent(
+            seq=seq + 1,
+            when=_now(),
+            actor="care_advocate",
+            action="approval",
+            target=plan.case.patient_name,
+            detail="Approved the gated surfaces.",
+            outcome="approved",
+        )
+    )
+    plan.audit.append(
+        AuditEvent(
+            seq=seq + 2,
+            when=_now(),
+            actor="system",
+            action="order_request",
+            target=plan.case.pcp_name,
+            detail="Sent the written-order request to the PCP office.",
+            outcome="sent",
+        )
+    )
+    plan.audit.append(
+        AuditEvent(
+            seq=seq + 3,
+            when=_now(),
+            actor="system",
+            action="patient_call",
+            target=plan.case.patient_name,
+            detail="Placed the patient status call.",
+            outcome="sent",
+        )
+    )
     return plan
 
 

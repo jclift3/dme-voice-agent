@@ -133,6 +133,20 @@ class GateStatus(StrEnum):
     REJECTED = "rejected"
 
 
+class AuditEvent(BaseModel):
+    """One recorded interaction or decision. The append-only trail is the record of
+    what the system did (which suppliers it called, what it learned, what a care
+    advocate approved) and the substrate for improving the agents over time."""
+
+    seq: int
+    when: str
+    actor: str  # "system" | "care_advocate"
+    action: str  # supplier_call | coverage_check | order_request | patient_call | approval
+    target: str
+    detail: str
+    outcome: str | None = None
+
+
 class Surface(BaseModel):
     """One coordination surface and whether acting on it commits liability."""
 
@@ -153,3 +167,4 @@ class CoordinationPlan(BaseModel):
     gate: GateStatus = GateStatus.PENDING
     patient_update_script: str | None = None  # filled after approval
     escalations: list[str] = Field(default_factory=list)
+    audit: list[AuditEvent] = Field(default_factory=list)

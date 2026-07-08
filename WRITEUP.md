@@ -51,6 +51,11 @@ is critical path, so it surfaces that as the next action, not "found a supplier,
 - **The sparse directory is a CSV** (name, phone, address). What matters is discovered
   by calling, mocked in `data/` for the demo, or placed by the voice agent and graded by
   Cekura supplier personas in production.
+- **Auditability.** Every call and decision is recorded to an append-only interaction log
+  (which supplier was phoned, what was asked, what came back, the coverage check, the
+  advocate's approval, with timestamps and actor). It is the record of what happened and
+  the substrate for improvement: label outcomes to tune ranking and prompts, and Cekura
+  monitors the real calls in production against the same rubrics.
 - **Tested and linted.** pytest (unit and functional), ruff, three eval layers, and a CI
   gate (`make gate`).
 

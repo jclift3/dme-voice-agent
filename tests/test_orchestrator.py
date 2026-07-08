@@ -61,3 +61,13 @@ def test_reject_sets_rejected_gate():
 
 def test_approve_unknown_plan_returns_none():
     assert approve_plan("case_missing") is None
+
+
+def test_audit_records_every_call_and_the_approval():
+    plan = build_plan(ELEANOR)
+    calls = [e for e in plan.audit if e.action == "supplier_call"]
+    assert len(calls) == 9  # one recorded interaction per supplier in the directory
+    assert any(e.action == "coverage_check" for e in plan.audit)
+    approve_plan(plan.plan_id)
+    assert any(e.action == "approval" and e.actor == "care_advocate" for e in plan.audit)
+    assert any(e.action == "patient_call" for e in plan.audit)
