@@ -68,7 +68,11 @@ is critical path, so it surfaces that as the next action, not "found a supplier,
 - **Real calls to real suppliers:** the call outcomes are mocked in `data/`. The voice
   agent and Cekura supplier personas are wired for it, but cold-calling real businesses
   is not appropriate for a take-home.
-- **Persistence, auth, a multi-case queue:** skipped per the brief. One case, in memory.
+- **Persistence and auth:** skipped per the brief; state is in memory. A light multi-case
+  triage queue with filtering *is* built (the console works a small caseload and sorts by
+  what needs attention, since one advocate carries several at once). What remains is
+  persistence and per-case supplier state, as the cases currently share the one mocked
+  directory.
 - **Patient intake:** out of scope per the updated brief.
 - **Three of the five failure modes.** I went deep on the supplier-side ones (can't
   serve, said-yes-then-silent, no answer) because that is the surface where the time

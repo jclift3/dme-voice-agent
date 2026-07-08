@@ -36,3 +36,12 @@ def test_reject_endpoint(client):
 
 def test_unknown_plan_returns_404(client):
     assert client.get("/plans/nope").status_code == 404
+
+
+def test_caseload_builds_a_triage_spread(client):
+    assert client.post("/caseload/build").json()["count"] == 4
+    plans = client.get("/plans").json()
+    assert len(plans) == 4
+    # a meaningful queue needs variety: some waiting on the order, one already complete
+    assert any(p["order"]["status"] != "signed" for p in plans)  # waiting on order
+    assert any(p["gate"] == "approved" for p in plans)  # complete

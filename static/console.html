@@ -14,7 +14,7 @@
   body { margin:0; background:var(--bg); color:var(--ink);
     font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
   header { padding:16px 24px; border-bottom:1px solid var(--line); background:var(--card);
-    display:flex; align-items:center; gap:16px; flex-wrap:wrap; position:sticky; top:0; z-index:5; }
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; position:sticky; top:0; z-index:5; }
   header h1 { font-size:17px; font-weight:600; margin:0; }
   header .sub { color:var(--muted); font-size:13px; }
   .spacer { flex:1; }
@@ -23,18 +23,30 @@
   button:hover { background:var(--gray-bg); }
   button.primary { background:var(--green); color:#fff; border-color:var(--green); }
   button.danger { color:var(--red); border-color:#f1c4c0; }
-  .legend { padding:8px 24px; background:var(--blue-bg); color:var(--blue); font-size:12.5px;
-    border-bottom:1px solid var(--line); }
+  button.chip { font-size:13px; padding:4px 11px; border-radius:999px; }
+  button.chip.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .legend { padding:8px 24px; background:var(--blue-bg); color:var(--blue); font-size:12.5px; border-bottom:1px solid var(--line); }
   .legend b { font-weight:600; }
-  main { padding:20px 24px; display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(520px,1fr)); }
+  main { padding:20px 24px; }
   .empty { color:var(--muted); padding:40px; text-align:center; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .filters { display:flex; gap:8px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+  .filters .lbl { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-right:2px; }
+  .queue { display:grid; gap:10px; max-width:900px; }
+  .qrow { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+    display:flex; align-items:center; gap:14px; }
+  .qrow .who { font-weight:600; }
+  .qrow .na { color:var(--muted); font-size:13px; margin-top:2px; }
+  .qrow .grow { flex:1; min-width:0; }
+  .qrow .na, .qrow .who { overflow:hidden; text-overflow:ellipsis; }
+  .status { font-size:12px; font-weight:600; padding:3px 10px; border-radius:999px; flex:none; min-width:150px; text-align:center; }
+  .s-high { background:var(--red-bg); color:var(--red); }
+  .s-med { background:var(--amber-bg); color:var(--amber); }
+  .s-done { background:var(--green-bg); color:var(--green); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; max-width:760px; margin-top:16px; }
   .card-head { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .card-head .id { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; color:var(--muted); }
   .badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:999px; }
-  .b-pending { background:var(--amber-bg); color:var(--amber); }
-  .b-approved { background:var(--green-bg); color:var(--green); }
-  .b-rejected { background:var(--red-bg); color:var(--red); }
+  .b-pending { background:var(--amber-bg); color:var(--amber); } .b-approved { background:var(--green-bg); color:var(--green); } .b-rejected { background:var(--red-bg); color:var(--red); }
   section { padding:12px 16px; border-bottom:1px solid var(--line); }
   section:last-child { border-bottom:0; }
   .label { font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:0 0 8px; }
@@ -43,26 +55,21 @@
   .met { color:var(--green); } .unmet { color:var(--amber); } .unknown { color:var(--muted); }
   .why { color:var(--muted); font-size:13px; }
   .pill { font-size:10px; font-weight:600; padding:1px 7px; border-radius:999px; flex:none; min-width:64px; text-align:center; }
-  .p-cand { background:var(--green-bg); color:var(--green); }
-  .p-follow { background:var(--amber-bg); color:var(--amber); }
-  .p-other { background:var(--gray-bg); color:var(--muted); }
-  .p-dial { background:var(--blue-bg); color:var(--blue); }
+  .p-cand { background:var(--green-bg); color:var(--green); } .p-follow { background:var(--amber-bg); color:var(--amber); }
+  .p-other { background:var(--gray-bg); color:var(--muted); } .p-dial { background:var(--blue-bg); color:var(--blue); }
   .summary { font-size:13px; color:var(--muted); margin:0 0 8px; }
-  .next { padding:12px 16px; background:var(--green-bg); font-size:14px; }
-  .next .label { color:var(--green); }
-  .escalate { padding:10px 16px; background:var(--red-bg); color:var(--red); font-size:13px; }
-  .escalate div { margin:3px 0; }
+  .next { padding:12px 16px; background:var(--green-bg); font-size:14px; } .next .label { color:var(--green); }
+  .escalate { padding:10px 16px; background:var(--red-bg); color:var(--red); font-size:13px; } .escalate div { margin:3px 0; }
   .boundary { display:flex; align-items:center; gap:10px; margin:12px 0 8px; color:var(--amber); font-size:12px; font-weight:600; }
   .boundary::before,.boundary::after { content:""; height:1px; flex:1; background:repeating-linear-gradient(90deg,var(--amber) 0 4px,transparent 4px 8px); opacity:.5; }
   .tag { font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px; flex:none; }
-  .tag.auto { background:var(--green-bg); color:var(--green); }
-  .tag.gated { background:var(--amber-bg); color:var(--amber); }
+  .tag.auto { background:var(--green-bg); color:var(--green); } .tag.gated { background:var(--amber-bg); color:var(--amber); }
   .det { color:var(--muted); font-size:13px; }
   .actions { padding:12px 16px; display:flex; gap:8px; }
   .script { padding:12px 16px; background:var(--green-bg); font-size:13px; }
   .meta { font-size:13px; color:var(--muted); }
-  .dialing { padding:12px 16px; }
-  .dialing .status { font-size:13px; color:var(--muted); margin-bottom:8px; }
+  .back { margin-bottom:12px; }
+  .dialing { padding:12px 16px; } .dialing .status2 { font-size:13px; color:var(--muted); margin-bottom:8px; }
 </style>
 </head>
 <body>
@@ -72,130 +79,133 @@
     <div class="sub">Calling to discover is automatic. Everything below the trust boundary needs approval.</div>
   </div>
   <div class="spacer"></div>
-  <button class="primary" onclick="build()">Build Eleanor's case</button>
+  <button class="primary" onclick="buildCaseload()">Build caseload</button>
+  <button onclick="buildEleanor()">Just Eleanor's case</button>
   <button onclick="reset()">Reset</button>
 </header>
 <div class="legend">
   <b>Real:</b> the coordination reasoning (bucketing, ranking, coverage rules, blockers, the gate) and the deployed Vapi voice agent.
   <b>Simulated in this web view:</b> the supplier call outcomes and the directory. The actual phone calls run on the voice + Cekura layer, not this page.
 </div>
-<main id="plans"><div class="empty">No case loaded. Click "Build Eleanor's case" to work it across the four surfaces.</div></main>
+<main id="app"><div class="empty">No cases loaded. Click "Build caseload" to triage several at once, or "Just Eleanor's case" for the single-case detail.</div></main>
 
 <script>
 const esc = s => (s||"").replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const gateFmt = g => ({pending_advocate_approval:["b-pending","pending approval"],approved:["b-approved","approved"],rejected:["b-rejected","rejected"]}[g]||["b-pending",g]);
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
-let animating = false;
+let animating=false, selected=null, filter="all";
 
-function reqRow(r){
-  const cls = r.met===true?"met":r.met===false?"unmet":"unknown";
-  const m = r.met===true?"✓":r.met===false?"○":"–";
-  return `<div class="row"><span class="${cls}">${m}</span><span>${esc(r.detail)}</span></div>`;
+// ---- queue triage ----
+function triage(p){
+  if(p.gate==="approved") return {label:"Complete", cls:"s-done", pr:3};
+  if(!p.suppliers.shortlist.length) return {label:"Escalate · no supplier", cls:"s-high", pr:0};
+  if(p.order.status!=="signed") return {label:"Waiting on order", cls:"s-high", pr:1};
+  return {label:"Ready to confirm", cls:"s-med", pr:2};
 }
-function pillFor(a){
-  if(a.status==="candidate") return ["READY","p-cand"];
-  if(a.status==="needs_recall"||a.status==="needs_recontact") return ["CALL BACK","p-follow"];
-  return [a.status.replace(/_/g," "),"p-other"];
+const attn = p => triage(p).pr<=1;
+function passFilter(p){
+  const t=triage(p);
+  if(filter==="all") return true;
+  if(filter==="attn") return t.pr<=1;
+  if(filter==="ready") return t.pr===2;
+  if(filter==="done") return t.pr===3;
+  return true;
 }
-function supplierRow(a){
-  const [pill,cls] = pillFor(a);
-  const eta = a.delivery_eta_days!=null?`${a.delivery_eta_days}d`:"";
-  const mi = a.approx_miles!=null?` · ${a.approx_miles}mi`:"";
-  return `<div class="row"><span class="pill ${cls}">${pill}</span><span>${esc(a.name)} <span class="why">${eta}${mi}</span><div class="why">${esc(a.reason)}</div></span></div>`;
+function qrow(p){
+  const t=triage(p), c=p.case;
+  return `<div class="qrow"><span class="status ${t.cls}">${t.label}</span>
+    <div class="grow"><div class="who">${esc(c.patient_name)} · ${c.age} · ${esc(c.hcpcs)}</div>
+      <div class="na">${esc(p.next_action)}</div></div>
+    <button onclick="review('${p.plan_id}')">Review</button></div>`;
 }
-function surfaceRow(s){
-  const tag = s.gated?`<span class="tag gated">GATED</span>`:`<span class="tag auto">AUTO</span>`;
-  return `<div class="row">${tag}<span>${esc(s.name)} <span class="det">${esc(s.status)} · ${esc(s.detail)}</span></span></div>`;
-}
-function auditRow(e){
-  const who = e.actor==="care_advocate"?"advocate":"system";
-  const cls = e.actor==="care_advocate"?"p-follow":"p-other";
-  return `<div class="row"><span class="why" style="min-width:58px">${esc(e.when)}</span><span class="pill ${cls}">${who}</span><span><b>${esc(e.action.replace(/_/g," "))}</b> · ${esc(e.target)}${e.outcome?` <span class="why">(${esc(e.outcome)})</span>`:""}<div class="why">${esc(e.detail)}</div></span></div>`;
+function queueView(plans){
+  const sorted=[...plans].sort((a,b)=>triage(a).pr-triage(b).pr || a.case.patient_name.localeCompare(b.case.patient_name));
+  const shown=sorted.filter(passFilter);
+  const n=k=>plans.filter(p=>{const t=triage(p).pr; return k==="all"||(k==="attn"&&t<=1)||(k==="ready"&&t===2)||(k==="done"&&t===3);}).length;
+  const chip=(k,txt)=>`<button class="chip ${filter===k?'on':''}" onclick="setFilter('${k}')">${txt} (${n(k)})</button>`;
+  return `<div class="filters"><span class="lbl">Caseload</span>
+      ${chip("all","All")}${chip("attn","Needs attention")}${chip("ready","Ready to confirm")}${chip("done","Complete")}</div>
+    <div class="queue">${shown.map(qrow).join("")||'<div class="empty">No cases match this filter.</div>'}</div>`;
 }
 
-function card(p){
-  const [bcls,btxt] = gateFmt(p.gate);
-  const c = p.case, cov = p.coverage, su = p.suppliers;
-  const auto = p.surfaces.filter(s=>!s.gated), gated = p.surfaces.filter(s=>s.gated);
-  const canAct = p.gate==="pending_advocate_approval";
-  return `<div class="card">
+// ---- case detail ----
+function reqRow(r){ const cls=r.met===true?"met":r.met===false?"unmet":"unknown"; const m=r.met===true?"✓":r.met===false?"○":"–";
+  return `<div class="row"><span class="${cls}">${m}</span><span>${esc(r.detail)}</span></div>`; }
+function pillFor(a){ if(a.status==="candidate")return["READY","p-cand"]; if(a.status==="needs_recall"||a.status==="needs_recontact")return["CALL BACK","p-follow"]; return[a.status.replace(/_/g," "),"p-other"]; }
+function supplierRow(a){ const [p,c]=pillFor(a); const e=a.delivery_eta_days!=null?`${a.delivery_eta_days}d`:""; const m=a.approx_miles!=null?` · ${a.approx_miles}mi`:"";
+  return `<div class="row"><span class="pill ${c}">${p}</span><span>${esc(a.name)} <span class="why">${e}${m}</span><div class="why">${esc(a.reason)}</div></span></div>`; }
+function surfaceRow(s){ const tag=s.gated?`<span class="tag gated">GATED</span>`:`<span class="tag auto">AUTO</span>`;
+  return `<div class="row">${tag}<span>${esc(s.name)} <span class="det">${esc(s.status)} · ${esc(s.detail)}</span></span></div>`; }
+function auditRow(e){ const who=e.actor==="care_advocate"?"advocate":"system"; const cls=e.actor==="care_advocate"?"p-follow":"p-other";
+  return `<div class="row"><span class="why" style="min-width:58px">${esc(e.when)}</span><span class="pill ${cls}">${who}</span><span><b>${esc(e.action.replace(/_/g," "))}</b> · ${esc(e.target)}${e.outcome?` <span class="why">(${esc(e.outcome)})</span>`:""}<div class="why">${esc(e.detail)}</div></span></div>`; }
+
+function card(p, withBack){
+  const [bcls,btxt]=gateFmt(p.gate); const c=p.case, cov=p.coverage, su=p.suppliers;
+  const auto=p.surfaces.filter(s=>!s.gated), gated=p.surfaces.filter(s=>s.gated);
+  const canAct=p.gate==="pending_advocate_approval";
+  return `${withBack?'<div class="back"><button onclick="review(null)">← Back to caseload</button></div>':''}
+  <div class="card">
     <div class="card-head"><span class="id">${esc(p.plan_id)}</span>
       <span class="meta">${esc(c.patient_name)}, ${c.age} · ${esc(c.medicare_type)} · ${esc(c.equipment.replace(/_/g," "))} (${esc(c.hcpcs)})</span>
       <div class="spacer"></div><span class="badge ${bcls}">${btxt}</span></div>
-
     <div class="next"><p class="label">Next action</p>${esc(p.next_action)}</div>
-
     ${p.escalations.length?`<div class="escalate"><p class="label">Blockers</p>${p.escalations.map(e=>`<div>! ${esc(e)}</div>`).join("")}</div>`:""}
-
     <section><p class="label">Supplier outreach · <span class="mock">simulated call outcomes</span> · ${su.used_ai?"AI / Claude":"deterministic"}</p>
       <div class="summary">${esc(su.summary)}</div>
-      ${su.shortlist.map(supplierRow).join("")}
-      ${su.followups.map(supplierRow).join("")}
-      ${su.other.map(supplierRow).join("")}
-    </section>
-
+      ${su.shortlist.map(supplierRow).join("")}${su.followups.map(supplierRow).join("")}${su.other.map(supplierRow).join("")}</section>
     <section><p class="label">Coverage · steps needed and cost (not a coverage decision)</p>
-      <div class="summary">${esc(cov.headline)}</div>
-      ${cov.requirements.map(reqRow).join("")}
-      <div class="row"><span class="det">Prior authorization: ${cov.prior_auth_required?"required":"not required"}. ${esc(cov.estimated_patient_responsibility)}</span></div>
-    </section>
-
-    <section><p class="label">Coordination surfaces</p>
-      ${auto.map(surfaceRow).join("")}
-      <div class="boundary">trust boundary · approval required below</div>
-      ${gated.map(surfaceRow).join("")}
-    </section>
-
+      <div class="summary">${esc(cov.headline)}</div>${cov.requirements.map(reqRow).join("")}
+      <div class="row"><span class="det">Prior authorization: ${cov.prior_auth_required?"required":"not required"}. ${esc(cov.estimated_patient_responsibility)}</span></div></section>
+    <section><p class="label">Coordination surfaces</p>${auto.map(surfaceRow).join("")}
+      <div class="boundary">trust boundary · approval required below</div>${gated.map(surfaceRow).join("")}</section>
     <section><p class="label">Interaction log · every call and decision is recorded (${p.audit.length})</p>
       ${p.audit.map(auditRow).join("")}
-      <div class="why" style="margin-top:8px">This trail is the record of what happened, and the substrate for improvement: label outcomes to tune ranking and prompts, and Cekura monitors the real calls in production.</div>
-    </section>
-
+      <div class="why" style="margin-top:8px">The record of what happened, and the substrate for improvement: label outcomes to tune ranking and prompts; Cekura monitors the real calls in production.</div></section>
     ${p.patient_update_script?`<div class="script"><p class="label">Patient update (sent)</p>${esc(p.patient_update_script)}</div>`:""}
-    ${canAct?`<div class="actions">
-      <button class="primary" onclick="act('${p.plan_id}','approve')">Approve gated surfaces</button>
+    ${canAct?`<div class="actions"><button class="primary" onclick="act('${p.plan_id}','approve')">Approve gated surfaces</button>
       <button class="danger" onclick="act('${p.plan_id}','reject')">Reject</button></div>`:""}
   </div>`;
 }
 
-// One-time "working the supplier list" reveal so the discovery reads as calls, not a snapshot.
+// ---- render ----
+function render(plans){
+  const el=document.getElementById("app");
+  if(!plans.length){ el.innerHTML=`<div class="empty">No cases loaded. Click "Build caseload" above.</div>`; return; }
+  if(plans.length===1){ el.innerHTML=card(plans[0], false); return; }
+  const sel=selected && plans.find(p=>p.plan_id===selected);
+  el.innerHTML = queueView(plans) + (sel?card(sel, true):"");
+}
+async function refresh(){ if(animating) return; render(await (await fetch("/plans")).json()); }
+function setFilter(k){ filter=k; refresh(); }
+function review(id){ selected=id; refresh(); if(id) window.scrollTo({top:0,behavior:"smooth"}); }
+
 async function animateDiscovery(p){
-  const el = document.getElementById("plans");
-  const all = [...p.suppliers.shortlist, ...p.suppliers.followups, ...p.suppliers.other]
-    .sort((a,b)=>a.name.localeCompare(b.name));
-  el.innerHTML = `<div class="card"><div class="card-head"><span class="meta">Working the supplier list (9 enrolled suppliers, phone only)</span></div>
-    <div class="dialing"><div class="status" id="dstat">Calling suppliers one at a time…</div><div id="dial"></div></div></div>`;
-  const dial = document.getElementById("dial"), stat = document.getElementById("dstat");
-  for(let i=0;i<all.length;i++){
-    const a = all[i];
-    const row = document.createElement("div"); row.className="row";
-    row.innerHTML = `<span class="pill p-dial">☎ dialing</span><span>${esc(a.name)} <span class="why">${esc(a.phone||"")}</span></span>`;
-    dial.appendChild(row);
-    stat.textContent = `Calling ${a.name}…`;
-    await sleep(360);
-    row.outerHTML = supplierRow(a);  // flip from "dialing" to the assessed outcome
-    await sleep(120);
+  const el=document.getElementById("app");
+  const all=[...p.suppliers.shortlist,...p.suppliers.followups,...p.suppliers.other].sort((a,b)=>a.name.localeCompare(b.name));
+  el.innerHTML=`<div class="card"><div class="card-head"><span class="meta">Working the supplier list (9 enrolled suppliers, phone only)</span></div>
+    <div class="dialing"><div class="status2" id="dstat">Calling suppliers one at a time…</div><div id="dial"></div></div></div>`;
+  const dial=document.getElementById("dial"), stat=document.getElementById("dstat");
+  for(const a of all){
+    const row=document.createElement("div"); row.className="row";
+    row.innerHTML=`<span class="pill p-dial">☎ dialing</span><span>${esc(a.name)}</span>`;
+    dial.appendChild(row); stat.textContent=`Calling ${a.name}…`;
+    await sleep(360); row.outerHTML=supplierRow(a); await sleep(120);
   }
-  stat.textContent = "Done. Assessing and ranking what we learned…";
-  await sleep(650);
+  stat.textContent="Done. Assessing and ranking what we learned…"; await sleep(650);
 }
 
-async function refresh(){
-  if(animating) return;
-  const plans = await (await fetch("/plans")).json();
-  const el = document.getElementById("plans");
-  el.innerHTML = plans.length ? plans.map(card).join("") : `<div class="empty">No case loaded. Click "Build Eleanor's case" above.</div>`;
-}
-async function build(){
-  animating = true;
-  try {
+async function buildEleanor(){
+  animating=true; selected=null;
+  try{
+    await fetch("/case/reset",{method:"POST"});
     await fetch("/case/build",{method:"POST"});
-    const plans = await (await fetch("/plans")).json();
-    if(plans.length && plans[0].gate==="pending_advocate_approval") await animateDiscovery(plans[0]);
-    document.getElementById("plans").innerHTML = plans.map(card).join("");
-  } finally { animating = false; }
+    const plans=await (await fetch("/plans")).json();
+    if(plans.length===1 && plans[0].gate==="pending_advocate_approval") await animateDiscovery(plans[0]);
+    render(plans);
+  } finally { animating=false; }
 }
-async function reset(){ animating=false; await fetch("/case/reset",{method:"POST"}); refresh(); }
+async function buildCaseload(){ selected=null; filter="all"; await fetch("/caseload/build",{method:"POST"}); refresh(); }
+async function reset(){ animating=false; selected=null; await fetch("/case/reset",{method:"POST"}); refresh(); }
 async function act(id,what){ await fetch(`/plans/${id}/${what}`,{method:"POST"}); refresh(); }
 
 refresh();

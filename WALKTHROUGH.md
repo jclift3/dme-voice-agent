@@ -41,7 +41,14 @@ decisions that actually need a human."
 the voice agent are real; the call outcomes and the directory are simulated in this view."
 
 ## Part 2 — The console (4 min)
-**DO:** Click **Build Eleanor's case**. Watch it dial each supplier one at a time.
+**DO (the queue, 30s):** Click **Build caseload**.
+**SAY:** "One advocate carries several cases at once, so the landing is a triage queue.
+It sorts by what needs attention: two are waiting on the written order, one is ready to
+confirm, one is complete. I can filter to 'needs attention' and work those first. This is
+the case management layer. Let me open Eleanor." **DO:** Click **Review** on Eleanor (or
+**Just Eleanor's case** for the animated single view).
+
+**DO:** Watch it dial each supplier one at a time.
 **SAY:** "The directory gives me only name, phone, and address. Everything that decides
 whether a supplier can serve Eleanor is discovered by calling. Watch it work the list."
 

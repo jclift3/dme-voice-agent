@@ -20,7 +20,7 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from . import orchestrator
 from .callback import send_outbound
-from .cases import ELEANOR
+from .cases import CASELOAD, ELEANOR
 
 app = FastAPI(title="DME Back-End Coordination")
 
@@ -67,6 +67,17 @@ def reset_case() -> JSONResponse:
     """Clear the case so the demo can be run again from a clean slate."""
     orchestrator.clear_plans()
     return JSONResponse({"ok": True})
+
+
+@app.post("/caseload/build")
+def build_caseload() -> JSONResponse:
+    """Work a small caseload so the queue and its filters are meaningful (this is how
+    one advocate triages several cases at once). One case is approved to show a
+    completed one."""
+    orchestrator.clear_plans()
+    plans = [orchestrator.build_plan(c) for c in CASELOAD]
+    orchestrator.approve_plan(plans[-1].plan_id)  # James: order signed -> mark complete
+    return JSONResponse({"count": len(plans)})
 
 
 @app.get("/plans")
