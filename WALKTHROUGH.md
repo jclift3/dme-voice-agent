@@ -28,7 +28,7 @@ what's needed and what you'll owe," never "you're covered."
 
 ---
 
-## Part 1 — Frame the problem (1.5 min)
+## Part 1: Frame the problem (1.5 min)
 **SAY:** "DME coordination is a three-party problem: the patient, the PCP, and the
 supplier. Intake is already done. The hard part is coordinating across all three without
 a care advocate chasing each one by hand. A care advocate calls suppliers, chases the
@@ -40,7 +40,7 @@ decisions that actually need a human."
 **SAY (the thesis):** point at the blue legend bar. "This line matters: the reasoning and
 the voice agent are real; the call outcomes and the directory are simulated in this view."
 
-## Part 2 — The console (4 min)
+## Part 2: The console (4 min)
 **DO (the queue, 30s):** Click **Build caseload**.
 **SAY:** "One advocate carries several cases at once, so the landing is a triage queue.
 It sorts by what needs attention: two are waiting on the written order, one is ready to
@@ -85,7 +85,7 @@ did what. This is the auditability. It answers 'where is the record of those cal
 it is the substrate for improvement: you label these outcomes to tune the ranking and the
 prompts, and in production Cekura monitors the real calls against the same rubrics."
 
-## Part 3 — The voice and eval reality (3 min)
+## Part 3: The voice and eval reality (3 min)
 This is where the real calls live, and it is the most important part for a voice role.
 **SAY:** "The web view simulated the calls so the demo is deterministic. But the outbound
 agent is real and deployed on Vapi. And I did not just trust it, I tested it."
@@ -100,10 +100,10 @@ call from audio, which is a metric-design lesson. That found-fixed-verified loop
 point: it is how you keep a voice agent honest with many moving parts."
 
 **SAY:** "And it is all backed by tests." **DO (optional):** run `python -m evals.run_evals`
-in the terminal. "Five policy evals, 27 unit and functional tests, green in CI on every
+in the terminal. "Five policy evals, 29 unit and functional tests, green in CI on every
 push."
 
-## Part 4 — Sequencing, cut list, what's next (1.5 min)
+## Part 4: Sequencing, cut list, what's next (1.5 min)
 **SAY (sequencing):** "I built supplier outreach first and deepest because that is where
 the time goes. Then the orchestrator across all four surfaces with the care-advocate gate."
 
@@ -115,7 +115,7 @@ chose depth on supplier outreach over breadth."
 **SAY (what's next, with the why):** "One more day: make discovery real by wiring the live
 supplier calls and running the Cekura suite against them, plus a re-contact scheduler that
 catches the silent supplier. Two weeks, in order: SLA alerting on stalls first because that
-invisible failure loses a week, then persistence and a case queue, then the real PCP leg,
+invisible failure loses a week, then persistence and per-case supplier state, then the real PCP leg,
 then close the billing-code and patient-goes-quiet gaps, then learned ranking. Discovery,
 then failure-catching, then scale, then optimize."
 
@@ -125,7 +125,7 @@ same case end to end with no keys and no network, and prints the whole thread.
 
 ## Likely questions (short answers)
 - **"Is there a database?"** No, in-memory by design (the brief says skip a persistent DB).
-  Persistence and a case queue are the first scale item.
+  A light triage queue already exists; making it durable is the first scale item.
 - **"Is the directory real?"** No. Their CSV was not provided, so I wrote a stand-in with
   the exact sparse shape (name, phone, address). The code reads that path, so their file
   drops in unchanged.

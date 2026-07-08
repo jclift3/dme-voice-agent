@@ -10,8 +10,11 @@ advocate in charge of anything that commits.
 commits on the patient's behalf is gated behind a care advocate and is reversible. The
 system says "here's what's needed and what you'll owe," never "you're covered."
 
-**Live demo:** https://dme-coordination-jclift3.fly.dev/ (click "Build Eleanor's case").
-It runs on the deterministic path, so no keys are needed and nothing external is called.
+**Live demo (deployed on Fly.io):** https://dme-coordination-jclift3.fly.dev/ . Click
+**Build caseload** for the triage queue, or **Just Eleanor's case** for the single-case
+detail. A self-playing loop is at
+[/replay](https://dme-coordination-jclift3.fly.dev/replay). It runs on the deterministic
+path, so no keys are needed and nothing external is called.
 
 ## Where to find things
 
@@ -79,15 +82,20 @@ experience, and a stronger model runs the async synthesis where quality matters.
 
 ```bash
 uvicorn app.main:app --port 8000 --reload
-# open http://127.0.0.1:8000/  then click "Build Eleanor's case"
+# open http://127.0.0.1:8000/  then click "Build caseload"
 ```
 
-The console shows the next action, the blockers, the coverage check, the supplier board
-(ready / call-back / can't-serve), and the four surfaces split by the trust boundary.
-Approve to fire the gated surfaces and see the patient update.
+The console lands on a **triage queue** (one advocate carries several cases): each case
+gets a status (waiting on order / ready to confirm / escalate / complete), filterable and
+sorted by what needs attention. Review a case for the next action, the blockers, the
+coverage check, the supplier board (ready / call-back / can't-serve), the four surfaces
+split by the trust boundary, and the **interaction log** (every call and decision
+recorded). Approve to fire the gated surfaces and see the patient update. A self-playing
+walkthrough is at `/replay`.
 
-Endpoints: `POST /case/build`, `GET /plans`, `GET /plans/{id}`,
-`POST /plans/{id}/approve`, `POST /plans/{id}/reject`, `POST /vapi/webhook`.
+Endpoints: `POST /caseload/build`, `POST /case/build`, `POST /case/reset`, `GET /plans`,
+`GET /plans/{id}`, `POST /plans/{id}/approve`, `POST /plans/{id}/reject`, `GET /replay`,
+`POST /vapi/webhook`.
 
 ## Evals and monitoring (three layers)
 

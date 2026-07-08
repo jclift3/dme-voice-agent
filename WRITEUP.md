@@ -2,8 +2,9 @@
 
 Intake is done. This builds the coordination engine that takes the documented Eleanor
 case and works it across the four surfaces (supplier outreach, PCP order, coverage,
-patient update), with a care advocate approving anything that commits. It runs with no
-keys and no phone: `python -m sim.run_demo`.
+patient update), with a care advocate approving anything that commits. It is deployed and
+live at https://dme-coordination-jclift3.fly.dev/, and runs locally with no keys and no
+phone: `python -m sim.run_demo`.
 
 ## Sequencing
 
@@ -92,8 +93,9 @@ supplier.
 
 **With two weeks:** in priority order. First, an SLA timer with alerting on stalled
 orders and silent suppliers, because that invisible failure mode is the one that quietly
-loses a week. Then persistence and a real case queue so one advocate can carry many
-cases. Then the real PCP order leg via fax or EHR behind the existing gate. Then close
+loses a week. Then persistence and per-case supplier state: the triage queue exists, but
+make it durable and give each case its own supplier situation rather than the shared
+directory. Then the real PCP order leg via fax or EHR behind the existing gate. Then close
 the remaining failure modes: validate the billing code before the claim goes out (the
 order-is-wrong case), and add patient-goes-quiet handling to the callback (retry and a
 fallback channel). Then a learned supplier-ranking model once call-outcome history exists.

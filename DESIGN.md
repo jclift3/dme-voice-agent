@@ -61,6 +61,19 @@ coinsurance Eleanor owes with no supplemental plan. Whether a claim actually pay
 depends on the signed order, the supplier, and billing lining up, which is not the
 system's call.
 
+**A triage queue, because one advocate carries many cases.** The console lands on a
+caseload sorted by what needs attention (waiting on the order, ready to confirm,
+escalate, complete) with filters. Case management is the difference between a demo and a
+tool: the value is triage, surfacing which of ten cases is stuck. Only Eleanor is from
+the brief; the other cases are illustrative variations that differ in order status so the
+queue is meaningful.
+
+**An append-only audit trail.** Every call and decision is recorded (which supplier was
+phoned, what was asked, what came back, the coverage check, the advocate's approval),
+with a timestamp and actor. Coordination without a record is unmanageable. It answers
+"where is the record of those calls" and is the substrate for improvement: label outcomes
+to tune the ranking and the prompts, with Cekura monitoring the real calls in production.
+
 ## What I did not build, and the tradeoff
 
 | Not built | Status | Tradeoff |
@@ -68,7 +81,8 @@ system's call.
 | Live insurance authorization (270/271) | Mocked | K0001 needs no prior auth; eligibility is a structured call, not where the judgment is. |
 | Live PCP/EHR order write | Mocked | The decision worth modeling is when to nudge; the fax is plumbing. |
 | Real calls to real suppliers | Outcomes mocked in `data/` | The voice agent and Cekura personas are wired; cold-calling real businesses is not appropriate for a take-home. |
-| Persistence, auth, multi-case queue | Skipped per the brief | One case, in memory, is enough to show the shape. |
+| Persistence and per-case supplier state | Partial | A light triage queue with filtering is built; persistence and per-case supplier variation remain (cases share the one mocked directory). |
+| Auth | Skipped per the brief | In-memory, single advocate. |
 
 ## What would worry me about shipping this
 
@@ -98,14 +112,19 @@ The one sentence: the system owns coordination, not coverage judgment; reads are
 automated, commits are gated and reversible, and it never says "you're covered."
 
 ### Run-of-show
+Live at https://dme-coordination-jclift3.fly.dev/ (self-playing loop at `/replay` as a
+backup, and `python -m sim.run_demo` as a no-network fallback).
 1. Frame (30s): intake is done, the work is back-end coordination across four surfaces,
    and the trust boundary is the idea.
-2. `python -m sim.run_demo` or the console: build Eleanor's case.
-3. Walk the supplier board: three ready, three call-backs, three that cannot serve, all
-   discovered by calling. Point at the said-yes-then-silent supplier.
+2. The queue: Build caseload. One advocate carries several cases, so the landing is a
+   triage queue sorted by what needs attention; filter to "needs attention," then open
+   Eleanor.
+3. Watch it work the supplier list, then walk the board: three ready, three call-backs,
+   three that cannot serve, all discovered by calling. Point at the said-yes-then-silent
+   supplier.
 4. Point at the next action: the unsigned written order is the blocker, not the supplier.
 5. Approve, and the gated surfaces fire; the patient update states the 20% and never
-   claims coverage.
+   claims coverage. Scroll to the interaction log: every call and decision is recorded.
 6. Proof: `evals/run_evals` and the test suite; Cekura for the deployed agent.
 
 ### Hard questions
@@ -121,3 +140,8 @@ automated, commits are gated and reversible, and it never says "you're covered."
 - "Original Medicare has no network, so what is 'in-network'?" Right, the wrong frame. It
   is enrolled plus accepts assignment plus taking patients plus in stock, discovered by
   calling, which is what the engine assesses.
+- "How do you manage ten cases at once?" The console lands on a triage queue sorted by
+  what needs attention, with filters, so you work the stuck ones first. Persistence and
+  per-case supplier state are the next steps.
+- "Where is the record of those calls?" The interaction log: every call and decision,
+  with timestamp and actor. It is also the data you label to improve the agents over time.
