@@ -16,6 +16,9 @@ from temporalio import workflow
 from temporalio.common import RetryPolicy
 
 with workflow.unsafe.imports_passed_through():
+    # Preload pydantic so the data converter does not import it mid-workflow (sandbox warns).
+    import pydantic_core  # noqa: F401
+
     from app.models import Case, CoordinationPlan, GateStatus
 
     from .activities import commit_gated_surfaces, discover, escalate_stall
