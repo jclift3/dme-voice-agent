@@ -49,5 +49,10 @@ history, the pending timer, and the signal.
 Durable execution fits because the domain *is* long-lived, timer-driven, and human-gated.
 LangGraph orchestrates LLM-agent graphs, which is a different problem: here the LLM is one
 node, not the control flow. Inngest is the lighter durable-timer option if standing up
-Temporal is too much. CrewAI is multi-agent collaboration, which this is not. See the
-orchestration discussion in the PR description.
+Temporal is too much. CrewAI is multi-agent collaboration, which this is not.
+
+Note that Temporal and LangGraph are not really competitors: they sit on different layers.
+Temporal orchestrates the case across days; LangGraph would orchestrate the reasoning
+inside a single call, and a whole call is one activity to Temporal. The full reasoning,
+plus how a long call keeps its context bounded, is in
+[../docs/orchestration.md](../docs/orchestration.md).
