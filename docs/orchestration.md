@@ -61,6 +61,11 @@ or today just Vapi plus a tight prompt plus the record-outcome tool). Temporal n
 the turns, only the final recorded outcome. Choosing Temporal for the workflow does not lock
 LangGraph out of the conversation.
 
+There is a runnable LangGraph build of exactly this in [`conversation/`](../conversation/README.md):
+a prior-authorization intake for a power wheelchair (a genuinely long call), with the
+extract / plan-reply / compress graph and a keyless demo that shows the window staying
+bounded while the slots fill in. It is the concrete version of the patterns below.
+
 ## The 30-minute call: keeping context bounded without losing the thread
 
 A long call risks the context window blowing up and the agent drifting. This is a
@@ -88,18 +93,18 @@ slot-filling pattern earns its keep.
 
 ## The decision on the code, and why
 
-We built the durable **Temporal** path (on the `temporal-orchestration` branch) because the
-workflow layer is the orchestration question we were actually asked. We did **not** add
-LangGraph to the code, on purpose:
+We built the durable **Temporal** path for the workflow layer, because that is the
+orchestration question we were actually asked, and a demonstrative **LangGraph** build for
+the conversation layer, to make the long-call context patterns concrete. Both live on the
+`temporal-orchestration` branch.
 
-- The conversation layer is handled today by the voice platform plus a tight prompt plus the
-  record-outcome tool, and the transactional supplier calls do not need more.
-- Adding a custom LangGraph conversation runtime now would duplicate what the voice platform
-  does and add a heavy dependency for no current value.
-- Knowing exactly where LangGraph would go, and why it is not needed yet, is a cleaner
-  position than an unused import. If the patient-facing empathetic call grows long enough to
-  need explicit turn-state control, that is the deliberate moment to add it, inside a
-  Temporal activity.
+What we deliberately did **not** do is put LangGraph on the production supplier-call path.
+Those calls are transactional (four questions, record, hang up) and are handled well by the
+voice platform plus a tight prompt plus the record-outcome tool; a custom conversation
+runtime there would be a heavy dependency for no current value. The LangGraph build targets
+the case that genuinely needs it: the long, multi-topic prior-auth intake, where bounded
+context and slot-filling earn their keep. The rule of thumb: reach for LangGraph when a call
+is long and the turn logic is non-trivial, not for a four-question script.
 
 ## The soundbites
 

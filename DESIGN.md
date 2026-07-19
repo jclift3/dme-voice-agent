@@ -84,10 +84,12 @@ is deterministic policy with the LLM as one node, not an LLM-driven graph, and i
 checkpointing is weaker than Temporal for multi-day timers and restarts. LangGraph's real
 home is the *conversation* layer (turn-by-turn reasoning inside a long call), which composes
 with Temporal rather than competing: a whole call is one Temporal activity, and inside it the
-agent manages its own bounded context. We did not add LangGraph to the code, on purpose: the
-transactional supplier calls are handled by the voice platform plus a tight prompt plus the
-record-outcome tool, so a custom conversation runtime would be a heavy dependency for no
-current value. The full reasoning, including how a 30-minute call keeps context bounded
+agent manages its own bounded context. A runnable LangGraph build of that layer is in
+[`conversation/`](conversation/README.md): a long prior-auth intake with an extract /
+plan-reply / compress graph and a keyless demo showing the window stay bounded while the
+slots fill. We deliberately did not put LangGraph on the production supplier-call path, since
+those calls are transactional and handled by the voice platform plus a tight prompt plus the
+record-outcome tool. The full reasoning, including how a long call keeps context bounded
 (rolling summary plus structured slot-filling), is in [docs/orchestration.md](docs/orchestration.md).
 
 ## What I did not build, and the tradeoff
