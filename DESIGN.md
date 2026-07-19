@@ -74,6 +74,24 @@ with a timestamp and actor. Coordination without a record is unmanageable. It an
 "where is the record of those calls" and is the substrate for improvement: label outcomes
 to tune the ranking and the prompts, with Cekura monitoring the real calls in production.
 
+**Orchestration is two layers, and the answer differs on each.** The workflow layer
+(coordinating the case over days: calls, retries, timers, the human gate) is durable
+execution, so **Temporal**, prototyped on the `temporal-orchestration` branch. The
+in-memory orchestrator here is correct for the no-DB take-home; Temporal is the production
+version of the same logic, with the care-advocate gate as a signal and the stall as an SLA
+timer. **LangGraph** was considered and set aside for the workflow layer: our control flow
+is deterministic policy with the LLM as one node, not an LLM-driven graph, and its
+checkpointing is weaker than Temporal for multi-day timers and restarts. LangGraph's real
+home is the *conversation* layer (turn-by-turn reasoning inside a long call), which composes
+with Temporal rather than competing: a whole call is one Temporal activity, and inside it the
+agent manages its own bounded context. A runnable LangGraph build of that layer is in
+[`conversation/`](conversation/README.md): a long prior-auth intake with an extract /
+plan-reply / compress graph and a keyless demo showing the window stay bounded while the
+slots fill. We deliberately did not put LangGraph on the production supplier-call path, since
+those calls are transactional and handled by the voice platform plus a tight prompt plus the
+record-outcome tool. The full reasoning, including how a long call keeps context bounded
+(rolling summary plus structured slot-filling), is in [docs/orchestration.md](docs/orchestration.md).
+
 ## What I did not build, and the tradeoff
 
 | Not built | Status | Tradeoff |

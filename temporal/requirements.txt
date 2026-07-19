@@ -1,0 +1,3 @@
+# Temporal orchestration branch only. Kept out of the root requirements so the keyless
+# demo and CI stay dependency-light. Install alongside the app deps to run the worker.
+temporalio>=1.9

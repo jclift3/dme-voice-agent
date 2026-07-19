@@ -61,8 +61,12 @@ def _assess_order(case: Case) -> PcpOrder:
     return PcpOrder(status=OrderStatus.REQUESTED, attempts=1, detail=detail, nudge_after_days=2)
 
 
-def build_plan(case: Case) -> CoordinationPlan:
-    """Work all four surfaces and assemble a plan with a clear next action."""
+def assemble_plan(case: Case) -> CoordinationPlan:
+    """Work all four surfaces and assemble a plan, without storing it.
+
+    This is the pure discovery pass: it calls to discover, checks coverage, and drafts
+    the order request, leaving the gated surfaces pending. `build_plan` wraps this for
+    the in-memory console; the Temporal workflow calls it as the discovery activity."""
     plan_id = f"case_{uuid.uuid4().hex[:8]}"
     coverage = coverage_check(case)
     suppliers = work_suppliers(case)
@@ -107,7 +111,13 @@ def build_plan(case: Case) -> CoordinationPlan:
         escalations=escalations,
         audit=_build_audit(case, suppliers, order),
     )
-    _PLANS[plan_id] = plan
+    return plan
+
+
+def build_plan(case: Case) -> CoordinationPlan:
+    """Assemble a plan and store it for the in-memory console."""
+    plan = assemble_plan(case)
+    _PLANS[plan.plan_id] = plan
     return plan
 
 
@@ -188,11 +198,12 @@ def _next_action(suppliers, order) -> str:
     return f"Confirm {top} and schedule delivery, then update the patient."
 
 
-def approve_plan(plan_id: str) -> CoordinationPlan | None:
-    """The care-advocate gate. Only here do the gated surfaces commit."""
-    plan = _PLANS.get(plan_id)
-    if plan is None:
-        return None
+def apply_approval(plan: CoordinationPlan) -> CoordinationPlan:
+    """Fire the gated surfaces and record the approval on a plan object.
+
+    The care-advocate gate. Only here do the gated surfaces commit. Shared by the
+    in-memory `approve_plan` and the Temporal commit activity so there is one source
+    of truth for what happens across the trust boundary."""
     plan.gate = GateStatus.APPROVED
     for s in plan.surfaces:
         if s.gated:
@@ -234,6 +245,14 @@ def approve_plan(plan_id: str) -> CoordinationPlan | None:
         )
     )
     return plan
+
+
+def approve_plan(plan_id: str) -> CoordinationPlan | None:
+    """The care-advocate gate for the in-memory console."""
+    plan = _PLANS.get(plan_id)
+    if plan is None:
+        return None
+    return apply_approval(plan)
 
 
 def reject_plan(plan_id: str, reason: str = "") -> CoordinationPlan | None:
